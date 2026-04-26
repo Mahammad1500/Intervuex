@@ -1,0 +1,38 @@
+{
+  "name": "intervuex",
+  "version": "1.0.0",
+  "description": "Intervuex — Automated Interview Scheduling Platform (MERN Stack)",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "start": "npm start --prefix backend",
+    "setup": "npm run install:all && npm run setup:env",
+    "setup:env": "cp backend/.env.example backend/.env && cp frontend/.env.example frontend/.env && echo '✅ .env files created. Please fill in your credentials.'"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/intervuex.git"
+  },
+  "keywords": [
+    "interview-scheduling",
+    "hr-automation",
+    "mern-stack",
+    "google-calendar",
+    "zoom-integration",
+    "microsoft-teams",
+    "saas"
+  ],
+  "author": "Intervuex Team",
+  "license": "MIT"
+}
