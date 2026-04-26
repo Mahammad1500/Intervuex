@@ -51,3 +51,10 @@ coverage/
 .eslintcache
 *.tgz
 *.zip
+
+# Root: personal / self-notes (*.md) stay on your machine, not in git
+# Published with the repo: README + DB/Atlas setup only (add a line like !SOME.md to include another)
+/*.md
+!README.md
+!DATABASE_AND_LOCAL_SETUP.md
+!MONGODB_ATLAS_SETUP.md

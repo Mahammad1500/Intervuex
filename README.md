@@ -657,6 +657,10 @@ Seed your database with these accounts for testing:
 
 ---
 
+## 📁 Extra markdown files in your clone
+
+The repository tracks **`README.md`**, **`DATABASE_AND_LOCAL_SETUP.md`**, and **`MONGODB_ATLAS_SETUP.md`**. You may have other `*.md` files next to them on disk (e.g. personal notes, flow diagrams, debug guides) — they are not part of Git; keep them for yourself and they will not be pushed.
+
 ## 🤝 Contributing
 
 1. Fork the repository
