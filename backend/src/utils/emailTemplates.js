@@ -147,6 +147,17 @@ const welcomeEmail = ({ user, tempPassword }) => ({
   `),
 });
 
+const passwordResetEmail = ({ user, resetUrl }) => ({
+  subject: 'Reset your Intervuex password',
+  html: baseTemplate(`
+    <span class="badge">Password reset</span>
+    <h2>Hi ${user.firstName},</h2>
+    <p>We received a request to reset your Intervuex password. This link expires in 1 hour.</p>
+    <a href="${resetUrl}" class="cta-button">Reset password</a>
+    <p>If you did not request this, you can ignore this email.</p>
+  `),
+});
+
 module.exports = {
   interviewScheduledCandidate,
   interviewScheduledInterviewer,
@@ -154,4 +165,5 @@ module.exports = {
   interviewCancelled,
   interviewRescheduled,
   welcomeEmail,
+  passwordResetEmail,
 };

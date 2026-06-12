@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Bell, Search, Plus, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, Bell, Plus, LogOut, ChevronDown } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import ThemeToggle from '../ui/ThemeToggle';
 import { notificationsAPI } from '../../services/api';
 import { cn, getRelativeTime } from '../../lib/utils';
 
@@ -11,9 +12,10 @@ const PAGE_TITLES = {
   '/interviews': 'Interviews',
   '/pipeline': 'Hiring Pipeline',
   '/schedule': 'Schedule Interview',
-  '/calendar': 'Calendar',
   '/analytics': 'Analytics',
+  '/workspaces': 'Company Workspaces',
   '/users': 'Team Management',
+  '/audit': 'Audit Log',
   '/settings': 'Settings',
 };
 
@@ -49,7 +51,7 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
   };
 
   return (
-    <header className="flex items-center h-16 px-6 bg-white border-b border-slate-100 gap-4 z-10">
+    <header className="flex items-center h-16 px-6 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 gap-4 z-10">
       <motion.button
         whileTap={{ scale: 0.92 }}
         onClick={onMenuClick}
@@ -59,7 +61,7 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
       </motion.button>
 
       <div className="flex-1 min-w-0">
-        <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h1>
       </div>
 
       {user?.role === 'hr' && (
@@ -72,6 +74,8 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
           Schedule Interview
         </motion.button>
       )}
+
+      <ThemeToggle size="sm" className="hidden sm:inline-flex" />
 
       <div className="relative">
         <motion.button
@@ -97,7 +101,7 @@ export default function Topbar({ onMenuClick, sidebarOpen }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-card border border-slate-100 overflow-hidden z-50"
+              className="absolute right-0 top-12 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <span className="font-semibold text-slate-800">Notifications</span>

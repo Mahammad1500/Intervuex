@@ -297,6 +297,24 @@ export default function InterviewDetail() {
             </CardContent>
           </Card>
 
+          {(interview.panelists?.length > 0) && (
+            <Card>
+              <CardContent>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Panel ({interview.panelists.length + 1} total)</p>
+                <ul className="space-y-2">
+                  <li className="text-sm text-slate-700">
+                    <span className="font-medium">Lead:</span> {interview.interviewerName || interview.interviewerEmail}
+                  </li>
+                  {interview.panelists.map((p) => (
+                    <li key={p.email} className="text-sm text-slate-600">
+                      {p.name ? `${p.name} · ` : ''}{p.email}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardContent className="space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Actions</p>

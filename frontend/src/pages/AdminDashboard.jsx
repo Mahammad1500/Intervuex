@@ -1,19 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import {
-  Video, Users, Building2, Clock, ArrowRight, TrendingUp, Copy, Pencil, Plus
-} from 'lucide-react';
+import { Video, Users, Building2, Clock, ArrowRight, TrendingUp } from 'lucide-react';
 import { analyticsAPI, companiesAPI } from '../services/api';
 import { StatCard } from '../components/ui/Card';
 import { StatusBadge } from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
-import { Input } from '../components/ui/Input';
 import { formatDate } from '../lib/utils';
 import useAuthStore from '../store/authStore';
-import { toast } from '../components/ui/Toaster';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
@@ -30,28 +24,6 @@ export default function AdminDashboard() {
   const [companyCount, setCompanyCount] = useState(0);
   const [hrCount, setHrCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [companies, setCompanies] = useState([]);
-  const [createModal, setCreateModal] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [editTarget, setEditTarget] = useState(null);
-  const [savingCode, setSavingCode] = useState(false);
-
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    defaultValues: { name: '', spaceCode: '' },
-  });
-  const { register: regCode, handleSubmit: submitCode, formState: { errors: errCode }, reset: resetCode } = useForm({
-    defaultValues: { spaceCode: '' },
-  });
-
-  const fetchCompanies = useCallback(() => {
-    companiesAPI
-      .getAll({ limit: 40, page: 1 })
-      .then((res) => {
-        setCompanies(res.data.data?.companies || []);
-        setCompanyCount(res.data.data?.pagination?.total || 0);
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -67,69 +39,6 @@ export default function AdminDashboard() {
       setHrCount(data.users?.totalHR || 0);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
-
-  useEffect(() => {
-    if (editTarget?.spaceCode) {
-      resetCode({ spaceCode: editTarget.spaceCode });
-    }
-  }, [editTarget, resetCode]);
-
-  const onCreateCompany = async (form) => {
-    setCreating(true);
-    try {
-      const payload = { name: form.name?.trim() };
-      const raw = form.spaceCode?.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-      if (raw && raw.length === 8) payload.spaceCode = raw;
-      if (raw && raw.length > 0 && raw.length !== 8) {
-        toast.error('Custom space code must be exactly 8 characters, or leave blank to auto-generate.');
-        setCreating(false);
-        return;
-      }
-      await companiesAPI.create(payload);
-      toast.success('Workspace created. Share the Space code with your HR team.');
-      setCreateModal(false);
-      reset();
-      fetchCompanies();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not create workspace');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const onUpdateSpaceCode = async (form) => {
-    if (!editTarget) return;
-    const raw = form.spaceCode?.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    if (raw.length !== 8) {
-      toast.error('Space code must be exactly 8 letters or numbers.');
-      return;
-    }
-    setSavingCode(true);
-    try {
-      await companiesAPI.updateSpaceCode(editTarget._id, raw);
-      toast.success('Space code updated. Inform HRs who have not yet registered.');
-      setEditTarget(null);
-      resetCode();
-      fetchCompanies();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Update failed');
-    } finally {
-      setSavingCode(false);
-    }
-  };
-
-  const copyCode = async (code) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      toast.success('Space code copied');
-    } catch {
-      toast.error('Copy failed');
-    }
-  };
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -159,7 +68,7 @@ export default function AdminDashboard() {
             {greeting()}, {user?.firstName} 👋
           </h1>
           <p className="text-slate-500 mt-1 text-sm max-w-xl">
-            Manage <strong>workspaces</strong>, <strong>Space codes</strong>, and <strong>who can sign in</strong>. Activity below is across all companies; open <em>Interviews</em> for single-round detail.
+            Platform overview across all company workspaces. Create spaces from <strong>Workspaces</strong> in the sidebar, then add HR from <strong>Team</strong>.
           </p>
         </div>
       </motion.div>
@@ -169,6 +78,25 @@ export default function AdminDashboard() {
         <StatCard label="Active HR Users" value={hrCount} icon={Users} color="violet" />
         <StatCard label="Companies" value={companyCount} icon={Building2} color="emerald" />
         <StatCard label="Completed" value={overview.completed ?? 0} icon={Clock} color="slate" />
+      </motion.div>
+
+      <motion.div variants={fadeUp} className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl border border-emerald-100/80 shadow-soft p-6 card-3d flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-6 h-6 text-emerald-700" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Company workspaces</h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {companyCount === 0
+                ? 'No workspaces yet — create one to get a Space code for HR registration.'
+                : `${companyCount} workspace${companyCount === 1 ? '' : 's'} active. Manage Space codes, email domains, and invite links.`}
+            </p>
+          </div>
+        </div>
+        <Button icon={Building2} onClick={() => navigate('/workspaces')}>
+          {companyCount === 0 ? 'Create first workspace' : 'Manage workspaces'}
+        </Button>
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -248,118 +176,6 @@ export default function AdminDashboard() {
         </motion.div>
       </div>
 
-      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-slate-200/80 shadow-soft overflow-hidden card-3d">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Workspaces (companies)</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Space codes let HRs self-register into the correct company</p>
-          </div>
-          <Button size="sm" icon={Plus} onClick={() => { reset(); setCreateModal(true); }}>
-            Add workspace
-          </Button>
-        </div>
-        <div className="p-0 overflow-x-auto">
-          {companies.length === 0 ? (
-            <div className="p-10 text-center text-slate-400 text-sm">No companies yet. Create a workspace to get a Space code.</div>
-          ) : (
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="px-5 py-3">Company</th>
-                  <th className="px-5 py-3">Space code</th>
-                  <th className="px-5 py-3">Active HR</th>
-                  <th className="px-5 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {companies.map((c) => (
-                  <tr key={c._id} className="hover:bg-slate-50/80">
-                    <td className="px-5 py-3.5">
-                      <p className="font-semibold text-slate-800">{c.name}</p>
-                      <p className="text-xs text-slate-400">Since {c.createdAt ? formatDate(c.createdAt) : '—'}</p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <code className="text-sm font-mono font-bold tracking-widest text-slate-800 bg-slate-100 px-2 py-1 rounded-lg">
-                        {c.spaceCode}
-                      </code>
-                    </td>
-                    <td className="px-5 py-3.5 text-slate-700">{c.hrCount ?? 0}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="sm" type="button" icon={Copy} onClick={() => copyCode(c.spaceCode)} />
-                        <Button variant="ghost" size="sm" type="button" icon={Pencil} onClick={() => setEditTarget(c)} title="Change space code" />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </motion.div>
-
-      <Modal
-        open={createModal}
-        onClose={() => { setCreateModal(false); reset(); }}
-        title="Add workspace"
-        description="Creates a new company. You can set a custom 8-character Space code or leave it blank to auto-generate one."
-        size="md"
-      >
-        <form onSubmit={handleSubmit(onCreateCompany)} className="p-6 pt-2 space-y-4">
-          <Input
-            label="Company name"
-            placeholder="e.g. Acme Corp"
-            error={errors.name?.message}
-            {...register('name', { required: 'Company name is required' })}
-          />
-          <Input
-            label="Custom Space code (optional)"
-            placeholder="8 characters, letters A–Z and numbers"
-            error={errors.spaceCode?.message}
-            {...register('spaceCode', {
-              validate: (v) => {
-                if (!v || !String(v).trim()) return true;
-                const t = String(v).replace(/[^A-Za-z0-9]/g, '');
-                return t.length === 0 || t.length === 8 || 'Must be exactly 8 letters/numbers, or leave blank';
-              }
-            })}
-          />
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" type="button" onClick={() => { setCreateModal(false); reset(); }}>Cancel</Button>
-            <Button type="submit" loading={creating}>Create</Button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
-        open={!!editTarget}
-        onClose={() => { setEditTarget(null); resetCode(); }}
-        title="Change Space code"
-        description="All new HR registrations will need this updated code. Tell existing users only if you change it."
-        size="sm"
-      >
-        {editTarget && (
-          <form onSubmit={submitCode(onUpdateSpaceCode)} className="p-6 pt-2 space-y-4">
-            <p className="text-sm text-slate-600">Company: <strong>{editTarget.name}</strong></p>
-            <Input
-              label="New Space code (8 characters)"
-              error={errCode.spaceCode?.message}
-              {...regCode('spaceCode', {
-                required: 'Required',
-                validate: (v) => {
-                  const t = String(v || '').replace(/[^A-Za-z0-9]/g, '');
-                  return t.length === 8 || 'Use exactly 8 letters or numbers';
-                }
-              })}
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" type="button" onClick={() => { setEditTarget(null); resetCode(); }}>Cancel</Button>
-              <Button type="submit" loading={savingCode}>Save</Button>
-            </div>
-          </form>
-        )}
-      </Modal>
-
       <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-slate-100 shadow-soft">
         <div className="flex items-center justify-between p-6 pb-0">
           <div>
@@ -368,10 +184,10 @@ export default function AdminDashboard() {
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => navigate('/users')}>
-              Team & companies
+              Team
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/schedule')} className="text-brand-600">
-              Admin schedule
+              Schedule
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>

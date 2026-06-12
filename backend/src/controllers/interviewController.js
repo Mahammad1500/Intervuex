@@ -32,18 +32,28 @@ const scheduleInterview = async (req, res, next) => {
   try {
     const {
       candidateEmail, candidateName, interviewerEmail, interviewerName,
-      role, interviewType, duration, scheduledAt, timezone, meetingPlatform, notes, meetingLink: manualLinkFromBody, companyId: companyIdFromBody,
+      role, interviewType, duration, scheduledAt, timezone, meetingPlatform, notes,
+      meetingLink: manualLinkFromBody, companyId: companyIdFromBody, panelists: panelistsRaw,
     } = req.body;
 
     const startTime = new Date(scheduledAt);
     const endTime = new Date(startTime);
-    endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
+    endTime.setMinutes(endTime.getMinutes() + parseInt(duration, 10));
 
-    const conflict = await schedulingEngine.checkConflicts(interviewerEmail, startTime, endTime);
+    const leadEmail = interviewerEmail.toLowerCase().trim();
+    const panelists = (Array.isArray(panelistsRaw) ? panelistsRaw : [])
+      .map((p) => ({
+        email: String(p.email || '').toLowerCase().trim(),
+        name: String(p.name || '').trim(),
+      }))
+      .filter((p) => p.email && p.email !== leadEmail);
+
+    const allParticipants = [leadEmail, ...panelists.map((p) => p.email)];
+    const conflict = await schedulingEngine.checkPanelConflicts(allParticipants, startTime, endTime);
     if (conflict.hasConflict) {
       return res.status(409).json({
         success: false,
-        message: 'Interviewer has another interview at this time.',
+        message: `Scheduling conflict for ${conflict.details.email || 'a participant'}.`,
         conflict: conflict.details,
       });
     }
@@ -53,24 +63,11 @@ const scheduleInterview = async (req, res, next) => {
 
     if (platform === 'manual' && manualLinkFromBody) {
       meetingResult = { meetingLink: String(manualLinkFromBody).trim(), meetingId: null, platform: 'manual' };
-    } else {
-      try {
-        meetingResult = await generateMeetingLink(platform, {
-          title: role,
-          startTime,
-          endTime,
-          candidateEmail,
-          interviewerEmail,
-          organizerUserId: req.user._id,
-        });
-      } catch (err) {
-        if (platform === 'google-meet') {
-          return res.status(400).json({
-            success: false,
-            message: err.message || 'Failed to generate Google Meet link. Open Settings → connect Google Calendar with Meet enabled, or choose Manual and paste a link.',
-          });
-        }
-      }
+    } else if (platform === 'google-meet') {
+      return res.status(400).json({
+        success: false,
+        message: 'Google Meet auto-generation is disabled. Choose Manual and paste a meeting link.',
+      });
     }
 
     let companyId = req.user.companyId;
@@ -98,13 +95,15 @@ const scheduleInterview = async (req, res, next) => {
       interviewType,
       candidateEmail: candidateEmail.toLowerCase().trim(),
       candidateName: candidateName || '',
-      interviewerEmail: interviewerEmail.toLowerCase().trim(),
+      interviewerEmail: leadEmail,
       interviewerName: interviewerName || '',
+      panelists,
+      isPanelInterview: panelists.length > 0,
       companyId,
       scheduledBy: req.user._id,
       scheduledAt: startTime,
       endTime,
-      duration: parseInt(duration),
+      duration: parseInt(duration, 10),
       timezone: timezone || 'UTC',
       meetingPlatform: platform,
       meetingLink: meetingResult.meetingLink,

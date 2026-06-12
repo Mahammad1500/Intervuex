@@ -5,6 +5,7 @@ import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import useAuthStore from '../store/authStore';
 import Button from '../components/ui/Button';
+import ThemeToggle from '../components/ui/ThemeToggle';
 import { Input, Select } from '../components/ui/Input';
 import { toast } from '../components/ui/Toaster';
 
@@ -34,7 +35,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-6 py-12 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle size="sm" />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"

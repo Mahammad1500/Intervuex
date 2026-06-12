@@ -71,6 +71,26 @@ const useAuthStore = create(
         }
       },
 
+      setSession: ({ user, accessToken, refreshToken }) => {
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false, error: null });
+      },
+
+      completeGoogleSignup: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data } = await api.post('/auth/google/complete', payload);
+          const { user, accessToken, refreshToken } = data.data;
+          api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
+          return { success: true };
+        } catch (err) {
+          const message = err.response?.data?.message || 'Signup failed.';
+          set({ isLoading: false, error: message });
+          return { success: false, message };
+        }
+      },
+
       updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
 
       setToken: (accessToken) => {

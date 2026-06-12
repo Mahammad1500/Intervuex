@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  User, Calendar, Bell, Shield, ExternalLink, Video, Zap, Clock, ArrowRight,
-  Link2Off, Save, Building2, Copy, Link2, Users, RefreshCw
+  User, Bell, Shield, Save, Building2, Copy, Link2, Users, RefreshCw
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import useAuthStore from '../store/authStore';
-import { usersAPI, calendarAPI, companiesAPI, interviewsAPI } from '../services/api';
+import { usersAPI, companiesAPI, api } from '../services/api';
 import { formatDateTime } from '../lib/utils';
 import Button from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
@@ -20,7 +19,6 @@ const makeTabs = (includeWorkspace) => {
     ...(includeWorkspace
       ? [{ id: 'workspace', label: 'Workspace', icon: Building2 }]
       : []),
-    { id: 'calendar', label: 'Scheduling & Meet', icon: Calendar },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
   ];
@@ -34,16 +32,13 @@ export default function Settings() {
   const includeWorkspace = ['hr', 'admin'].includes(user?.role);
   const TABS = makeTabs(includeWorkspace);
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'profile');
-  const [calendarStatus, setCalendarStatus] = useState({ google: false });
   const [saving, setSaving] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-  const [connectingCalendar, setConnectingCalendar] = useState('');
   const [workspace, setWorkspace] = useState(null);
   const [wsLoading, setWsLoading] = useState(false);
   const [copied, setCopied] = useState('');
   const [notif, setNotif] = useState({ email: true, emailCopyToOrganizer: true, reminder24h: true, reminder1h: true, reminder15: false });
   const [savingNotif, setSavingNotif] = useState(false);
-  const [upcoming, setUpcoming] = useState([]);
 
   useEffect(() => {
     const p = user?.preferences?.notifications;
@@ -57,11 +52,6 @@ export default function Settings() {
       });
     }
   }, [user?._id, user?.preferences?.notifications]);
-
-  useEffect(() => {
-    if (activeTab !== 'calendar') return;
-    interviewsAPI.getUpcoming().then((r) => setUpcoming(r.data.data?.interviews || [])).catch(() => setUpcoming([]));
-  }, [activeTab]);
 
   const setTab = (id) => {
     setActiveTab(id);
@@ -118,26 +108,6 @@ export default function Settings() {
     }
   };
 
-  useEffect(() => {
-    calendarAPI.getStatus()
-      .then(({ data }) => setCalendarStatus(data.data.status))
-      .catch(() => {});
-
-    const calendarParam = searchParams.get('calendar');
-    const connected = searchParams.get('connected');
-    const error = searchParams.get('error');
-    if (calendarParam === 'google' && connected === 'true') {
-      toast.success('Google Calendar connected successfully! You can now generate Google Meet links automatically.', 'Calendar Connected');
-      setCalendarStatus(prev => ({ ...prev, google: true }));
-      setActiveTab('calendar');
-      setSearchParams({});
-    } else if (calendarParam === 'google' && error === 'true') {
-      toast.error('Failed to connect Google Calendar. Please try again.', 'Connection Failed');
-      setActiveTab('calendar');
-      setSearchParams({});
-    }
-  }, []);
-
   const onSaveProfile = async (data) => {
     setSaving(true);
     try {
@@ -152,33 +122,15 @@ export default function Settings() {
   const onChangePassword = async (data) => {
     setSavingPassword(true);
     try {
-      await usersAPI.update(user._id, { currentPassword: data.currentPassword, newPassword: data.newPassword });
+      await api.patch('/auth/update-password', {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
       toast.success('Password changed successfully');
       resetPw();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Password change failed');
     } finally { setSavingPassword(false); }
-  };
-
-  const connectGoogle = async () => {
-    setConnectingCalendar('google');
-    try {
-      const { data } = await calendarAPI.getGoogleAuthUrl();
-      window.location.href = data.data.url;
-    } catch (err) {
-      toast.error('Could not initiate Google auth. Check credentials.');
-      setConnectingCalendar('');
-    }
-  };
-
-  const disconnectCalendar = async (provider) => {
-    try {
-      await calendarAPI.disconnect(provider);
-      setCalendarStatus(prev => ({ ...prev, [provider]: false }));
-      toast.success('Google Calendar disconnected');
-    } catch (err) {
-      toast.error('Disconnect failed');
-    }
   };
 
   const persistNotif = async (key, value) => {
@@ -374,79 +326,6 @@ export default function Settings() {
                     <Button type="submit" loading={saving} icon={Save}>Save Changes</Button>
                   </div>
                 </form>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'calendar' && (
-            <motion.div key="calendar" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-brand-500/10 to-violet-500/10 rounded-2xl border border-brand-100 p-5">
-                  <div className="flex items-center gap-2 text-brand-800 font-bold text-sm mb-1">
-                    <Zap className="w-4 h-4" />
-                    Next steps
-                  </div>
-                  <p className="text-sm text-slate-600 mb-3">Schedule a round, connect Google for Meet links, or open your pipeline.</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" type="button" onClick={() => navigate('/schedule')}>
-                      Schedule interview
-                    </Button>
-                    {user?.role === 'hr' && (
-                      <Button size="sm" type="button" variant="secondary" onClick={() => navigate('/pipeline')}>
-                        Open pipeline
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5">
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <Video className="w-4 h-4 text-emerald-600" />
-                    Google Calendar & Meet
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 mb-3">Required for one-click <strong>Google Meet</strong> links in the scheduling wizard.</p>
-                  <div className="flex items-center justify-between gap-2">
-                    {calendarStatus.google ? (
-                      <span className="text-xs font-semibold text-emerald-600">Connected</span>
-                    ) : (
-                      <span className="text-xs text-amber-600">Not connected</span>
-                    )}
-                    {calendarStatus.google ? (
-                      <Button variant="secondary" size="sm" type="button" icon={Link2Off} onClick={() => disconnectCalendar('google')}>Disconnect</Button>
-                    ) : (
-                      <Button size="sm" type="button" loading={connectingCalendar === 'google'} onClick={connectGoogle} icon={ExternalLink}>Connect</Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-6">
-                <h3 className="text-base font-bold text-slate-900 mb-1">Your upcoming interviews</h3>
-                <p className="text-sm text-slate-500 mb-4">From your company schedule — same data as the dashboard.</p>
-                {upcoming.length === 0 ? (
-                  <p className="text-sm text-slate-400">No upcoming interviews. <button type="button" className="text-brand-600 font-medium" onClick={() => navigate('/schedule')}>Schedule one</button>.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {upcoming.slice(0, 5).map((intv) => (
-                      <li key={intv._id}>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/interviews/${intv._id}`)}
-                          className="w-full text-left p-3 rounded-xl border border-slate-100 hover:border-brand-200 hover:bg-brand-50/40 transition flex items-center justify-between gap-2"
-                        >
-                          <span>
-                            <span className="font-semibold text-slate-800">{intv.role || intv.title}</span>
-                            <span className="text-slate-400"> · {intv.candidateName || intv.candidateEmail}</span>
-                            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {formatDateTime(intv.scheduledAt)}
-                            </p>
-                          </span>
-                          <ArrowRight className="w-4 h-4 text-slate-300" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
             </motion.div>
           )}

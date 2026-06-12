@@ -15,11 +15,12 @@ const errorHandler = require('./src/middleware/errorHandler');
 const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/users');
 const interviewRoutes = require('./src/routes/interviews');
-const calendarRoutes = require('./src/routes/calendar');
 const feedbackRoutes = require('./src/routes/feedback');
 const analyticsRoutes = require('./src/routes/analytics');
 const notificationRoutes = require('./src/routes/notifications');
 const companyRoutes = require('./src/routes/companies');
+const auditRoutes = require('./src/routes/audit');
+const mongoose = require('mongoose');
 
 const { sendScheduledReminders } = require('./src/services/notificationService');
 
@@ -44,19 +45,22 @@ app.use('/api', generalLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/interviews', interviewRoutes);
-app.use('/api/calendar', calendarRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/companies', companyRoutes);
+app.use('/api/audit', auditRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
+  const dbState = mongoose.connection.readyState;
+  const dbOk = dbState === 1;
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'degraded',
     service: 'Intervuex API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
+    database: dbOk ? 'connected' : 'disconnected',
   });
 });
 

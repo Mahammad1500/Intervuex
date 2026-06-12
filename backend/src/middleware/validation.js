@@ -19,6 +19,30 @@ const registerValidation = [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('Password must contain uppercase, lowercase, and number'),
   body('role').optional().isIn(['admin', 'hr']).withMessage('Invalid role'),
+  body('spaceCode').trim().notEmpty().withMessage('Space code is required for HR registration'),
+  handleValidation,
+];
+
+const createUserValidation = [
+  body('firstName').trim().notEmpty().withMessage('First name is required').isLength({ max: 50 }),
+  body('lastName').trim().notEmpty().withMessage('Last name is required').isLength({ max: 50 }),
+  body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('role').isIn(['admin', 'hr']).withMessage('Role must be admin or hr'),
+  body('companyId').optional({ checkFalsy: true }).isMongoId().withMessage('Invalid company workspace'),
+  body('department').optional().isString().trim().isLength({ max: 100 }),
+  body('jobTitle').optional().isString().trim().isLength({ max: 100 }),
+  body('phone').optional().isString().trim().isLength({ max: 30 }),
+  handleValidation,
+];
+
+const adminUpdateUserValidation = [
+  body('firstName').optional().trim().notEmpty().isLength({ max: 50 }),
+  body('lastName').optional().trim().notEmpty().isLength({ max: 50 }),
+  body('role').optional().isIn(['admin', 'hr']),
+  body('companyId').optional({ nullable: true, checkFalsy: true }).isMongoId(),
+  body('department').optional().isString().trim().isLength({ max: 100 }),
+  body('jobTitle').optional().isString().trim().isLength({ max: 100 }),
+  body('phone').optional().isString().trim().isLength({ max: 30 }),
   handleValidation,
 ];
 
@@ -67,6 +91,9 @@ const scheduleInterviewValidation = [
     return true;
   }),
   body('notes').optional().isString(),
+  body('panelists').optional().isArray().withMessage('Panelists must be an array'),
+  body('panelists.*.email').optional().isEmail().withMessage('Each panelist needs a valid email').normalizeEmail(),
+  body('panelists.*.name').optional().isString().trim(),
   // Empty string from HTML selects must be treated as "missing" (not invalid MongoId)
   body('companyId').optional({ checkFalsy: true }).isMongoId().withMessage('Valid company workspace is required for admin'),
   handleValidation,
@@ -119,12 +146,35 @@ const mongoIdValidation = (field = 'id') => [
   handleValidation,
 ];
 
+const forgotPasswordValidation = [
+  body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
+  handleValidation,
+];
+
+const resetPasswordValidation = [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('Password must contain uppercase, lowercase, and number'),
+  handleValidation,
+];
+
+const googleCompleteValidation = [
+  body('signupToken').notEmpty().withMessage('Signup session expired'),
+  body('spaceCode').trim().notEmpty().withMessage('Space code is required'),
+  handleValidation,
+];
+
 module.exports = {
   handleValidation,
   registerValidation,
   loginValidation,
+  createUserValidation,
+  adminUpdateUserValidation,
   scheduleInterviewValidation,
   updateInterviewValidation,
   feedbackValidation,
   mongoIdValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
+  googleCompleteValidation,
 };

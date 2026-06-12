@@ -1,20 +1,33 @@
 const Interview = require('../models/Interview');
 const { addMinutes, addDays, setHours, setMinutes } = require('date-fns');
-const logger = require('../utils/logger');
 
 const BUSINESS_HOURS = { start: 9, end: 18 };
 const SLOT_INCREMENT_MINUTES = 30;
 
-const checkConflicts = async (interviewerEmail, startTime, endTime, excludeInterviewId = null) => {
-  const query = {
-    interviewerEmail: interviewerEmail.toLowerCase(),
+const activeOverlapQuery = (email, startTime, endTime, excludeInterviewId = null) => {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const emailLower = email.toLowerCase();
+  const base = {
     status: { $in: ['scheduled', 'confirmed'] },
-    scheduledAt: { $lt: new Date(endTime) },
-    endTime: { $gt: new Date(startTime) },
+    scheduledAt: { $lt: end },
+    endTime: { $gt: start },
   };
-  if (excludeInterviewId) query._id = { $ne: excludeInterviewId };
+  if (excludeInterviewId) base._id = { $ne: excludeInterviewId };
 
-  const conflicting = await Interview.findOne(query);
+  return {
+    ...base,
+    $or: [
+      { interviewerEmail: emailLower },
+      { panelists: { $elemMatch: { email: emailLower } } },
+    ],
+  };
+};
+
+const checkConflicts = async (interviewerEmail, startTime, endTime, excludeInterviewId = null) => {
+  const conflicting = await Interview.findOne(
+    activeOverlapQuery(interviewerEmail, startTime, endTime, excludeInterviewId),
+  );
 
   if (conflicting) {
     return {
@@ -24,10 +37,20 @@ const checkConflicts = async (interviewerEmail, startTime, endTime, excludeInter
         scheduledAt: conflicting.scheduledAt,
         endTime: conflicting.endTime,
         candidateEmail: conflicting.candidateEmail,
+        email: interviewerEmail.toLowerCase(),
       },
     };
   }
 
+  return { hasConflict: false, details: null };
+};
+
+const checkPanelConflicts = async (emails, startTime, endTime, excludeInterviewId = null) => {
+  const unique = [...new Set(emails.map((e) => e.toLowerCase().trim()).filter(Boolean))];
+  for (const email of unique) {
+    const result = await checkConflicts(email, startTime, endTime, excludeInterviewId);
+    if (result.hasConflict) return result;
+  }
   return { hasConflict: false, details: null };
 };
 
@@ -61,6 +84,6 @@ const suggestAlternativeSlots = async (interviewerEmail, preferredStart, duratio
   return slots;
 };
 
-const schedulingEngine = { checkConflicts, suggestAlternativeSlots };
+const schedulingEngine = { checkConflicts, checkPanelConflicts, suggestAlternativeSlots };
 
 module.exports = { schedulingEngine };

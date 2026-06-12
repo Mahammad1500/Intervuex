@@ -5,6 +5,7 @@ import {
   CheckCircle2, Users, Clock, Globe, Sparkles, ChevronRight
 } from 'lucide-react';
 import Button from '../components/ui/Button';
+import ThemeToggle from '../components/ui/ThemeToggle';
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -46,10 +47,13 @@ const colorIconBg = {
 
 export default function Landing() {
   const navigate = useNavigate();
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
-      <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+    <div className="min-h-screen bg-white dark:bg-slate-950 overflow-x-hidden">
+      <header className="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl gradient-brand flex items-center justify-center shadow-brand-glow">
@@ -58,11 +62,11 @@ export default function Landing() {
             <span className="text-lg font-bold gradient-text">Intervuex</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <button onClick={() => navigate('/login')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Features</button>
-            <button onClick={() => navigate('/login')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">How it Works</button>
-            <button onClick={() => navigate('/login')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Pricing</button>
+            <button type="button" onClick={() => scrollTo('features')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Features</button>
+            <button type="button" onClick={() => scrollTo('how-it-works')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">How it Works</button>
           </nav>
           <div className="flex items-center gap-3">
+            <ThemeToggle size="sm" />
             <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Sign In</Button>
             <Button size="sm" onClick={() => navigate('/register')}>Get Started</Button>
           </div>
@@ -170,7 +174,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-24 px-6 bg-slate-50">
+      <section id="features" className="py-24 px-6 bg-slate-50 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-slate-900 tracking-tight">Everything you need to hire faster</h2>
@@ -194,7 +198,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-24 px-6 bg-white">
+      <section id="how-it-works" className="py-24 px-6 bg-white scroll-mt-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-slate-900 tracking-tight">From input to interview in 4 steps</h2>

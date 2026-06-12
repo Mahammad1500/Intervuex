@@ -15,6 +15,13 @@
 [![Express](https://img.shields.io/badge/Express-4-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
+**Live demo:** _Coming soon — add your Vercel URL here after deploy_  
+<!-- Example after deploy:
+[![Live Demo](https://img.shields.io/badge/Live-intervuex.vercel.app-6366f1?style=for-the-badge)](https://intervuex.vercel.app)
+-->
+
+Repository: [github.com/Mahammad1500/Intervuex](https://github.com/Mahammad1500/Intervuex)
+
 </div>
 
 ---
@@ -29,11 +36,8 @@
 - [Folder Structure](#-folder-structure)
 - [Role-Based Access Control](#-role-based-access-control)
 - [API Overview](#-api-overview)
+- [Live Demo & Screenshots](#-live-demo--screenshots)
 - [Setup Instructions](#-setup-instructions)
-- [Environment Variables](#-environment-variables)
-- [Integration Setup](#-integration-setup)
-- [Running the Project](#-running-the-project)
-- [Screenshots](#-ui-sections--screenshots)
 
 ---
 
@@ -589,44 +593,67 @@ cd backend && npm test
 
 ---
 
-## 🖥 UI Sections / Screenshots
+## 🌐 Live Demo & Screenshots
+
+### Live demo
+
+| Environment | URL |
+|-------------|-----|
+| **Production (Vercel)** | _Deploy first, then paste URL here_ |
+| **API health** | `https://YOUR-API.railway.app/api/health` |
+
+### Screenshots
+
+Add PNG files under [`docs/screenshots/`](docs/screenshots/) — see [`docs/screenshots/README.md`](docs/screenshots/README.md) for the exact list to capture.
+
+| Landing | Admin dashboard | Workspaces | Schedule (panel) |
+|---------|-----------------|------------|------------------|
+| ![Landing](./docs/screenshots/01-landing.png) | ![Dashboard](./docs/screenshots/03-admin-dashboard.png) | ![Workspaces](./docs/screenshots/04-workspaces.png) | ![Schedule](./docs/screenshots/06-schedule-panel.png) |
+
+| Login | Team | Audit log | HR pipeline |
+|---------|------|-----------|-------------|
+| ![Login](./docs/screenshots/02-login.png) | ![Team](./docs/screenshots/05-team.png) | ![Audit](./docs/screenshots/09-audit-log.png) | ![Pipeline](./docs/screenshots/12-hr-pipeline.png) |
+
+### What each screen shows
+
+- **Landing** — marketing page, no pricing
+- **Dashboard (admin)** — platform stats + link to Workspaces
+- **Workspaces** — company Space codes, HR invite links
+- **Schedule** — lead interviewer + optional **panel** round
+- **Team** — HR users per workspace, temp password on create
+- **Audit log** — admin actions (create workspace, user, etc.)
+
+---
+
+## 🖥 UI Sections (reference)
 
 ### 🏠 Landing Page
-Modern marketing page with hero section, feature cards, automation workflow preview, and CTA buttons.
+Marketing hero, features, how it works — no pricing section.
 
 ### 📊 Dashboard
-- Role-aware greeting and overview stats
-- Interactive area chart showing 14-day interview activity
-- Performance meters (completion rate, cancellation rate)
-- Upcoming interviews list with real-time meeting join buttons
+Role-aware stats, 14-day activity chart, workspace summary (admin).
 
-### 📅 Schedule Interview (4-Step Wizard)
-1. **Details** — Candidate email, interviewer email, role, type, notes
-2. **Schedule** — Date/time picker, duration, timezone, live slot checker
-3. **Platform** — Google Meet / Teams / Zoom / Manual selector
-4. **Review** — Full summary before confirming
+### 📅 Schedule Interview (wizard)
+1. **Details** — candidate, lead interviewer, **panel interviewers**, role, type  
+2. **Schedule** — date/time, duration, timezone, conflict check  
+3. **Platform** — paste meeting link (Zoom / Meet / Teams URL)  
+4. **Review** — confirm and send emails  
 
-### 📋 Interview Pipeline (Kanban Board)
-Drag-and-inspect board with four columns: Scheduled → Confirmed → Completed → Cancelled
-
-### 🗓 Calendar View
-Monthly calendar with color-coded interview dots per day. Click any date to see the day's interviews with join links.
+### 📋 Interview Pipeline (HR)
+Kanban: Scheduled → Confirmed → Completed → Cancelled
 
 ### 📈 Analytics
-- Area chart (trends), Bar chart (by type), Pie chart (recommendations), Status breakdown
-- Interviewer performance table with feedback rates
+Trends, completion rates, interviewer performance
 
-### 💬 Feedback Form
-Star rating system for overall score + 5 criteria ratings, recommendation selector, strengths/improvements text areas.
-
-### 👥 Team Management
-User table with role counts, search/filter, toggle active/inactive, and create user modal.
+### 👥 Team & Workspaces (admin)
+Create workspaces, Space codes, add HR, resend welcome email
 
 ### ⚙️ Settings
-- Profile editor with timezone selection
-- Calendar integration panel (Google + Microsoft connect/disconnect)
-- Notification preferences toggles
-- Password change form
+Profile, notifications, optional password change (not forced)
+
+---
+
+## 🖥 UI Sections / Screenshots _(legacy section — see Live Demo above)_
 
 ---
 
@@ -657,9 +684,37 @@ Seed your database with these accounts for testing:
 
 ---
 
-## 📁 Extra markdown files in your clone
+## Concepts — why we do things this way
 
-The repository tracks **`README.md`**, **`DATABASE_AND_LOCAL_SETUP.md`**, and **`MONGODB_ATLAS_SETUP.md`**. You may have other `*.md` files next to them on disk (e.g. personal notes, flow diagrams, debug guides) — they are not part of Git; keep them for yourself and they will not be pushed.
+Short answers; **full learning guide:** open **`INTERVUEX_GUIDE.md`** in the project root (full system: roles, workspaces, Atlas, JWT, deploy checklist).
+
+| Question | Answer |
+|----------|--------|
+| What is Intervuex? | Automated interview scheduling for HR — not a pricing/billing product |
+| Why MongoDB in `.env`? | Passwords stay off GitHub; backend reads `MONGODB_URI` at startup and connects to Atlas |
+| Why `%40` instead of `@` in URI? | URLs use `@` to separate password from server — encode `@` in the password as `%40` |
+| Why two `.env` files? | Backend = secrets + DB; frontend = public API URL only |
+| Where is my data in Atlas? | Database **`intervuex`**, not `sample_mflix` (sample movies are unrelated) |
+| Company workspace? | Admin → **Workspaces** → create company + Space code; HR joins via `/register?code=…` or Team |
+| Demo passwords on login? | Local dev only; hidden when you deploy to Vercel; no auto-seed in production |
+
+**Your app collections:** `intervuex` → `users`, `companies`, `interviews`, …
+
+---
+
+## 📁 Setup and deployment
+
+**Full step-by-step deploy guide (local on your Mac, not on GitHub):** open **`SETUP_AND_DEPLOYMENT.md`** in the project root.
+
+**Quick summary for GitHub visitors:**
+
+1. Clone repo → copy `backend/.env.example` and `frontend/.env.example`  
+2. MongoDB Atlas → database `intervuex`  
+3. Backend → **Railway** or **Render** (not Vercel)  
+4. Frontend → **Vercel**, root folder `frontend`, set `VITE_API_URL`  
+5. Backend `CLIENT_URL` = your Vercel URL exactly  
+
+**Secrets & local notes (never commit):** `backend/.env`, `frontend/.env`, and root guides `SETUP_AND_DEPLOYMENT.md`, `INTERVUEX_GUIDE.md`, `FEATURES.md`, `SYSTEM_FLOW.md` — keep on your Mac; see `SETUP_AND_DEPLOYMENT.md` → *Git — what to push vs keep local*.
 
 ## 🤝 Contributing
 

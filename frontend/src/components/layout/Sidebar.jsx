@@ -2,7 +2,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Calendar, Users, BarChart3, Settings,
-  Video, ClipboardList, GitBranch, X, Zap, ChevronRight
+  Video, GitBranch, ChevronRight, Building2, Shield
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
@@ -12,9 +12,10 @@ const NAV_ITEMS = [
   { label: 'Interviews', icon: Video, href: '/interviews', roles: ['admin', 'hr'] },
   { label: 'Pipeline', icon: GitBranch, href: '/pipeline', roles: ['hr'] },
   { label: 'Schedule', icon: Calendar, href: '/schedule', roles: ['admin', 'hr'] },
-  { label: 'Calendar', icon: Calendar, href: '/calendar', roles: ['hr'] },
   { label: 'Analytics', icon: BarChart3, href: '/analytics', roles: ['admin', 'hr'] },
+  { label: 'Workspaces', icon: Building2, href: '/workspaces', roles: ['admin'] },
   { label: 'Team', icon: Users, href: '/users', roles: ['admin'] },
+  { label: 'Audit log', icon: Shield, href: '/audit', roles: ['admin'] },
   { label: 'Settings', icon: Settings, href: '/settings', roles: ['admin', 'hr'] },
 ];
 
@@ -40,7 +41,7 @@ export default function Sidebar({ open, onClose }) {
         initial={false}
         animate={{ width: open ? 240 : 72, x: 0 }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        className="relative z-30 flex flex-col h-full bg-white border-r border-slate-100 shadow-soft overflow-hidden"
+        className="relative z-30 flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 shadow-soft overflow-hidden"
       >
         <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
           <img src="/assets/IntervuexLogo.png" alt="Intervuex" className="w-9 h-9 rounded-xl object-contain flex-shrink-0" />
@@ -72,7 +73,7 @@ export default function Sidebar({ open, onClose }) {
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group cursor-pointer',
                       isActive
                         ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
                     )}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={isActive ? 2.5 : 2} />

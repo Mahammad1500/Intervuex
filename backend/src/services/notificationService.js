@@ -73,6 +73,22 @@ const notifyInterviewScheduled = async (interview) => {
     }),
   ];
 
+  (interview.panelists || []).forEach((panelist) => {
+    if (panelist.email && panelist.email !== interview.interviewerEmail) {
+      const panelObj = { firstName: panelist.name || 'Panelist', email: panelist.email };
+      tasks.push(sendEmail(panelist.email, interviewScheduledInterviewer({
+        candidate: candidateObj,
+        interviewer: panelObj,
+        interview,
+        meetingLink,
+        role: interview.role,
+        interviewType: interview.interviewType,
+        startTime: interview.scheduledAt,
+        duration: interview.duration,
+      })));
+    }
+  });
+
   if (interview.scheduledBy) {
     const org = await User.findById(interview.scheduledBy);
     if (org?.email && org.preferences?.notifications?.email !== false

@@ -33,8 +33,7 @@ const DURATIONS = [
 ];
 
 const PLATFORMS = [
-  { value: 'google-meet', label: 'Google Meet', desc: 'Auto-generate a real Google Meet link (requires Google Calendar connected in Settings)', icon: '🎥', color: 'border-emerald-200 bg-emerald-50' },
-  { value: 'manual', label: 'Manual Link', desc: 'No link generated now — you can paste a meeting link later from the interview detail page', icon: '🔗', color: 'border-slate-200 bg-slate-50' },
+  { value: 'manual', label: 'Meeting link', desc: 'Paste a Zoom, Teams, or Meet link now, or add it later on the interview page', icon: '🔗', color: 'border-slate-200 bg-slate-50' },
 ];
 
 export default function ScheduleInterview() {
@@ -45,6 +44,9 @@ export default function ScheduleInterview() {
   const [conflictWarning, setConflictWarning] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState('manual');
   const [companies, setCompanies] = useState([]);
+  const [panelists, setPanelists] = useState([]);
+  const [panelEmail, setPanelEmail] = useState('');
+  const [panelName, setPanelName] = useState('');
 
   const { register, handleSubmit, formState: { errors }, watch, setValue, getValues, trigger } = useForm({
     defaultValues: {
@@ -97,7 +99,7 @@ export default function ScheduleInterview() {
         return;
       }
       if (selectedPlatform === 'manual' && !payload.meetingLink) delete payload.meetingLink;
-      if (selectedPlatform === 'google-meet') delete payload.meetingLink;
+      if (panelists.length > 0) payload.panelists = panelists;
       const res = await interviewsAPI.schedule(payload);
       toast.success('Interview scheduled!', 'Email invitations have been sent to both participants.');
       navigate(`/interviews/${res.data.data.interview._id}`);
@@ -181,8 +183,46 @@ export default function ScheduleInterview() {
                 error={errors.interviewerEmail?.message}
                 hint="An email invitation will be sent to this address"
                 {...register('interviewerEmail', { required: 'Interviewer email is required', pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email' } })} />
-              <Input label="Interviewer Name (Optional)" placeholder="Jane Smith"
+              <Input label="Lead interviewer name (optional)" placeholder="Jane Smith — panel lead"
                 {...register('interviewerName')} />
+              <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-4 space-y-3">
+                <p className="text-sm font-semibold text-slate-800">Panel interviewers (optional)</p>
+                <p className="text-xs text-slate-500">Add extra panelists — each gets an email invite and is checked for scheduling conflicts.</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input type="email" placeholder="panelist@company.com" value={panelEmail} onChange={(e) => setPanelEmail(e.target.value)}
+                    className="flex-1 h-10 rounded-xl border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                  <input type="text" placeholder="Name (optional)" value={panelName} onChange={(e) => setPanelName(e.target.value)}
+                    className="sm:w-40 h-10 rounded-xl border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                  <Button type="button" size="sm" variant="secondary" onClick={() => {
+                    const email = panelEmail.trim().toLowerCase();
+                    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                      toast.error('Enter a valid panelist email');
+                      return;
+                    }
+                    if (email === watch('interviewerEmail')?.toLowerCase()) {
+                      toast.error('Lead interviewer is already set — use a different panelist');
+                      return;
+                    }
+                    if (panelists.some((p) => p.email === email)) {
+                      toast.error('Panelist already added');
+                      return;
+                    }
+                    setPanelists([...panelists, { email, name: panelName.trim() }]);
+                    setPanelEmail('');
+                    setPanelName('');
+                  }}>Add</Button>
+                </div>
+                {panelists.length > 0 && (
+                  <ul className="space-y-1">
+                    {panelists.map((p) => (
+                      <li key={p.email} className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2 border border-slate-100">
+                        <span>{p.name ? `${p.name} · ` : ''}{p.email}</span>
+                        <button type="button" className="text-xs text-red-500 hover:underline" onClick={() => setPanelists(panelists.filter((x) => x.email !== p.email))}>Remove</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <Input label="Role / Position" icon={Briefcase} placeholder="e.g. Senior Frontend Engineer"
                 error={errors.role?.message}
                 {...register('role', { required: 'Role is required', minLength: { value: 3, message: 'Role must be at least 3 characters' } })} />

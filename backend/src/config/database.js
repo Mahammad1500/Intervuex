@@ -75,8 +75,12 @@ const connectDB = async () => {
     }
   }
 
-  // Seed demo users if database is empty
-  await seedDemoUsers();
+  // Seed demo users only in development (never auto-create demo accounts in production)
+  if (process.env.NODE_ENV !== 'production') {
+    await seedDemoUsers();
+  } else {
+    logger.info('Production mode: demo user auto-seed skipped.');
+  }
 };
 
 mongoose.connection.on('disconnected', () => {

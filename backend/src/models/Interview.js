@@ -13,6 +13,12 @@ const interviewSchema = new mongoose.Schema({
   candidateName: { type: String, trim: true, default: '' },
   interviewerEmail: { type: String, required: true, lowercase: true, trim: true },
   interviewerName: { type: String, trim: true, default: '' },
+  /** Additional panel interviewers (lead interviewer is interviewerEmail above) */
+  panelists: [{
+    email: { type: String, required: true, lowercase: true, trim: true },
+    name: { type: String, trim: true, default: '' },
+  }],
+  isPanelInterview: { type: Boolean, default: false },
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
   scheduledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   scheduledAt: { type: Date, required: true },

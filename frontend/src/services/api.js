@@ -39,6 +39,17 @@ export const usersAPI = {
   create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
   toggleStatus: (id) => api.patch(`/users/${id}/toggle-status`),
+  resendWelcome: (id) => api.post(`/users/${id}/resend-welcome`),
+  delete: (id) => api.delete(`/users/${id}`),
+};
+
+export const authAPI = {
+  googleStatus: () => api.get('/auth/google/status'),
+  googleStart: () => api.get('/auth/google'),
+};
+
+export const auditAPI = {
+  getAll: (params) => api.get('/audit', { params }),
 };
 
 export const analyticsAPI = {
@@ -68,6 +79,7 @@ export const companiesAPI = {
   create: (data) => api.post('/companies', data),
   getAll: (params) => api.get('/companies', { params }),
   getOne: (id) => api.get(`/companies/${id}`),
+  update: (id, data) => api.patch(`/companies/${id}`, data),
   updateSpaceCode: (id, spaceCode) => api.patch(`/companies/${id}/space-code`, { spaceCode }),
   delete: (id) => api.delete(`/companies/${id}`),
 };
@@ -79,4 +91,5 @@ export const notificationsAPI = {
   delete: (id) => api.delete(`/notifications/${id}`),
 };
 
+export { api };
 export default api;

@@ -5,6 +5,7 @@ const { mongoIdValidation } = require('../middleware/validation');
 const {
   createCompany,
   getMyWorkspace,
+  updateCompany,
   updateSpaceCode,
   getCompanies,
   getCompany,
@@ -17,6 +18,7 @@ router.get('/workspace', authorize('admin', 'hr'), getMyWorkspace);
 router.post('/', authorize('admin'), createCompany);
 router.get('/', authorize('admin'), getCompanies);
 router.patch('/:id/space-code', authorize('admin'), mongoIdValidation(), updateSpaceCode);
+router.patch('/:id', authorize('admin'), mongoIdValidation(), updateCompany);
 router.get('/:id', authorize('admin'), mongoIdValidation(), getCompany);
 router.delete('/:id', authorize('admin'), mongoIdValidation(), deleteCompany);
 
