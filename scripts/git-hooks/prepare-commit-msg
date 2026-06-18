@@ -1,15 +1,17 @@
 #!/bin/sh
-# Strip Cursor attribution from commit messages (macOS + Linux)
+# Strip IDE agent attribution trailers from commit messages (macOS + Linux)
 if [ -f "$1" ]; then
   sed -i '' \
     -e '/^Co-authored-by: Cursor <cursoragent@cursor.com>$/d' \
     -e '/^Co-authored-by: Cursor$/d' \
     -e '/^Made-with: Cursor$/d' \
     -e '/^Made with Cursor$/d' \
+    -e '/cursoragent@cursor.com/d' \
     "$1" 2>/dev/null || sed -i \
     -e '/^Co-authored-by: Cursor <cursoragent@cursor.com>$/d' \
     -e '/^Co-authored-by: Cursor$/d' \
     -e '/^Made-with: Cursor$/d' \
     -e '/^Made with Cursor$/d' \
+    -e '/cursoragent@cursor.com/d' \
     "$1"
 fi
