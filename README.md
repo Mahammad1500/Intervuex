@@ -17,9 +17,11 @@
 
 **Production app:** [https://intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) (owner use — your admin account)
 
-**Public demo (browse-only):** _Deploy separately — see [Production vs demo](#-production-vs-demo-two-links)_ below
+**UI demo (portfolio):** [https://intervuex-demo.vercel.app](https://intervuex-demo.vercel.app) — browse with sample data, no backend
 
-[![Live Demo](https://img.shields.io/badge/Demo-coming_soon-6366f1?style=for-the-badge)](https://intervuex-nine.vercel.app)
+📖 **Full project guide:** [docs/PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md) — production vs demo, env vars, how one repo powers both sites
+
+[![Live Demo](https://img.shields.io/badge/Demo-intervuex--demo.vercel.app-6366f1?style=for-the-badge)](https://intervuex-demo.vercel.app)
 
 Repository: [github.com/Mahammad1500/Intervuex](https://github.com/Mahammad1500/Intervuex)
 
@@ -30,6 +32,7 @@ Repository: [github.com/Mahammad1500/Intervuex](https://github.com/Mahammad1500/
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Documentation](#-documentation)
 - [Core Features](#-core-features)
 - [Automation Workflow](#-automation-workflow)
 - [Tech Stack](#-tech-stack)
@@ -55,6 +58,24 @@ HR enters candidate email, lead interviewer email, role, type, and time — then
 5. Shows pipeline, analytics, and audit log
 
 **Login roles:** only **Admin** and **HR** (there are no Interviewer or Candidate login accounts — those are email addresses on each interview record).
+
+---
+
+## 📖 Documentation
+
+| Document | What it covers |
+|----------|----------------|
+| **[docs/PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md)** | **Start here** — production vs demo, one codebase, env vars, why demo passwords show on demo only, mock data, deploy checklist |
+| [README.md](./README.md) | Features, setup, API overview, screenshots |
+
+**Two live sites, one repo:**
+
+| Site | URL | Backend | Login |
+|------|-----|---------|-------|
+| Production | [intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) | Railway + MongoDB | Your real email — **no demo passwords shown** |
+| UI demo | [intervuex-demo.vercel.app](https://intervuex-demo.vercel.app) | None (sample data in frontend) | `admin@intervuex.com` / `12345678` — **shown on login page** |
+
+Demo passwords appear only where `VITE_UI_DEMO_MODE=true` is set on Vercel (demo project). Production does not set that variable.
 
 ---
 
@@ -627,6 +648,7 @@ ONE GitHub repo → Production (Vercel + Railway + intervuex)
 | Environment | URL |
 |-------------|-----|
 | **Production (Vercel)** | [https://intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) |
+| **UI demo (Vercel)** | [https://intervuex-demo.vercel.app](https://intervuex-demo.vercel.app) |
 | **API health** | [https://intervuex-production-5e78.up.railway.app/api/health](https://intervuex-production-5e78.up.railway.app/api/health) |
 
 ### Screenshots
@@ -714,7 +736,7 @@ Enable with Railway `ALLOW_DEMO_USERS=true` + `DEMO_READ_ONLY_MODE=true` and Ver
 
 ## Concepts — why we do things this way
 
-Short answers; **full learning guide:** open **`INTERVUEX_GUIDE.md`** in the project root (full system: roles, workspaces, Atlas, JWT, deploy checklist).
+Short answers; **full guide:** [docs/PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md) (production vs demo, env vars, architecture).
 
 | Question | Answer |
 |----------|--------|
@@ -724,9 +746,10 @@ Short answers; **full learning guide:** open **`INTERVUEX_GUIDE.md`** in the pro
 | Why two `.env` files? | Backend = secrets + DB; frontend = public API URL only |
 | Where is my data in Atlas? | Database **`intervuex`**, not `sample_mflix` (sample movies are unrelated) |
 | Company workspace? | Admin → **Workspaces** → create company + Space code; HR joins via `/register?code=…` or Team |
-| Demo passwords on login? | Shown on live site when `VITE_SHOW_DEMO_LOGIN=true`; view-only when `DEMO_READ_ONLY_MODE=true` |
+| Demo passwords on login? | Only on [intervuex-demo.vercel.app](https://intervuex-demo.vercel.app) when `VITE_UI_DEMO_MODE=true` — see [PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md) |
 | Why did production work after deleting GitHub? | Vercel/Railway keep running last deploy; data is in Atlas, not GitHub — see [How production works](#-how-production-works-read-this-first) |
 | Do I need to reconnect Vercel/Railway? | Only if deploy fails or `git push` does not trigger redeploy |
+| Full explanation of both sites? | [docs/PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md) |
 
 **Your app collections:** `intervuex` → `users`, `companies`, `interviews`, …
 
