@@ -9,15 +9,17 @@ import Button from '../components/ui/Button';
 import ThemeToggle from '../components/ui/ThemeToggle';
 import { Input } from '../components/ui/Input';
 import { toast } from '../components/ui/Toaster';
+import { isUiDemoMode, isDemoSite, DEMO_ACCOUNTS } from '../demo/config';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuthStore();
+  const { login, demoEnterAs, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
   const { register, handleSubmit, formState: { errors }, setValue, clearErrors } = useForm();
 
   useEffect(() => {
+    if (isUiDemoMode()) return;
     authAPI.googleStatus().then((r) => setGoogleEnabled(r.data.data?.enabled)).catch(() => {});
   }, []);
 
@@ -42,13 +44,23 @@ export default function Login() {
     clearErrors();
   };
 
-  const showDemoLogin = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true';
-  const isLiveDemo = import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true' && !import.meta.env.DEV;
+  const handleDemoEnter = async (account) => {
+    if (isUiDemoMode()) {
+      const result = await demoEnterAs(account.key);
+      if (result.success) {
+        toast.success('Preview mode', `Browsing as ${account.role} — sample data only`);
+        navigate('/dashboard');
+      } else {
+        toast.error(result.message, 'Demo login failed');
+      }
+      return;
+    }
+    fillDemoAccount(account.email, account.password);
+  };
 
-  const demoAccounts = [
-    { role: 'Admin', email: 'admin@intervuex.com', password: '12345678' },
-    { role: 'HR', email: 'hr@intervuex.com', password: '12345678' },
-  ];
+  const uiDemo = isUiDemoMode();
+  const showDemoLogin = isDemoSite();
+  const isLiveDemo = (import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true' || uiDemo) && !import.meta.env.DEV;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex relative">
@@ -157,21 +169,35 @@ export default function Login() {
           {showDemoLogin && (
           <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">
-              {isLiveDemo ? 'Live demo — click to sign in' : 'Demo accounts (local dev)'}
+              {uiDemo ? 'UI preview — click to explore' : isLiveDemo ? 'Live demo — click to sign in' : 'Demo accounts (local dev)'}
             </p>
-            {isLiveDemo && (
-              <p className="text-xs text-slate-500 mb-3">Browse only — changes are disabled on the demo site.</p>
+            {(uiDemo || isLiveDemo) && (
+              <p className="text-xs text-slate-500 mb-3">
+                {uiDemo
+                  ? 'Sample data only — no backend. Browse all pages; create, edit, and delete are disabled.'
+                  : 'Browse only — changes are disabled on the demo site.'}
+              </p>
             )}
-            <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map(({ role, email, password }) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {DEMO_ACCOUNTS.map((account) => (
                 <button
-                  key={role}
+                  key={account.role}
                   type="button"
-                  onClick={() => fillDemoAccount(email, password)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/30 transition-all text-left group"
+                  onClick={() => handleDemoEnter(account)}
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/30 transition-all text-left group"
                 >
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-700">{role}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 truncate">{email}</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-700">
+                    {account.role}
+                    {uiDemo && <span className="ml-2 text-[10px] font-normal text-brand-600">→ Enter</span>}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                    <Mail className="w-3 h-3 shrink-0" />
+                    <span className="font-mono truncate">{account.email}</span>
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                    <Lock className="w-3 h-3 shrink-0" />
+                    <span className="font-mono">Password: <strong className="text-brand-600">{account.password}</strong></span>
+                  </p>
                 </button>
               ))}
             </div>

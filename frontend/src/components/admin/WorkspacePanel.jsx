@@ -25,7 +25,7 @@ export default function WorkspacePanel({ onCountChange }) {
   const { register: regCode, handleSubmit: submitCode, formState: { errors: errCode }, reset: resetCode } = useForm({
     defaultValues: { spaceCode: '' },
   });
-  const { register: regCo, handleSubmit: submitCo, reset: resetCo } = useForm({
+  const { register: regCo, handleSubmit: submitCo, formState: { errors: errCo }, reset: resetCo } = useForm({
     defaultValues: { name: '', allowedEmailDomains: '' },
   });
 
@@ -56,6 +56,11 @@ export default function WorkspacePanel({ onCountChange }) {
       });
     }
   }, [editCompany, resetCo]);
+
+  const onFormValidationError = (formErrors) => {
+    const first = Object.values(formErrors)[0];
+    if (first?.message) toast.error(first.message);
+  };
 
   const onCreateCompany = async (form) => {
     setCreating(true);
@@ -228,15 +233,22 @@ export default function WorkspacePanel({ onCountChange }) {
         description="A workspace is one company on Intervuex. HR uses the Space code to register or you add them from Team."
         size="md"
       >
-        <form onSubmit={handleSubmit(onCreateCompany)} className="p-6 pt-2 space-y-4">
+        <form onSubmit={handleSubmit(onCreateCompany, onFormValidationError)} className="p-6 pt-2 space-y-4">
           <Input label="Company name" placeholder="e.g. Acme Corp" error={errors.name?.message}
-            {...register('name', { required: 'Company name is required' })} />
+            hint="At least 2 characters"
+            {...register('name', {
+              required: 'Company name is required',
+              minLength: { value: 2, message: 'Company name must be at least 2 characters' },
+              validate: (v) => (v?.trim().length >= 2) || 'Company name must be at least 2 characters',
+            })} />
           <Input label="Custom Space code (optional)" placeholder="8 letters/numbers, or leave blank"
+            error={errors.spaceCode?.message}
+            hint="Leave blank to auto-generate, or enter exactly 8 characters"
             {...register('spaceCode', {
               validate: (v) => {
                 if (!v || !String(v).trim()) return true;
                 const t = String(v).replace(/[^A-Za-z0-9]/g, '');
-                return t.length === 0 || t.length === 8 || 'Must be 8 characters or blank';
+                return t.length === 0 || t.length === 8 || 'Space code must be 8 characters or left blank';
               },
             })} />
           <Textarea label="Allowed email domains (optional)" rows={2}
@@ -253,8 +265,12 @@ export default function WorkspacePanel({ onCountChange }) {
       <Modal open={!!editCompany} onClose={() => { setEditCompany(null); resetCo(); }}
         title="Edit workspace" size="md">
         {editCompany && (
-          <form onSubmit={submitCo(onUpdateCompany)} className="p-6 pt-2 space-y-4">
-            <Input label="Company name" {...regCo('name', { required: 'Required' })} />
+          <form onSubmit={submitCo(onUpdateCompany, onFormValidationError)} className="p-6 pt-2 space-y-4">
+            <Input label="Company name" error={errCo.name?.message}
+              {...regCo('name', {
+                required: 'Company name is required',
+                minLength: { value: 2, message: 'At least 2 characters' },
+              })} />
             <Textarea label="Allowed email domains" rows={2} {...regCo('allowedEmailDomains')} />
             <p className="text-xs text-slate-500">Space code: <code className="font-mono font-bold">{editCompany.spaceCode}</code></p>
             <div className="flex justify-end gap-2">
@@ -268,7 +284,7 @@ export default function WorkspacePanel({ onCountChange }) {
       <Modal open={!!editTarget} onClose={() => { setEditTarget(null); resetCode(); }}
         title="Change Space code" size="sm">
         {editTarget && (
-          <form onSubmit={submitCode(onUpdateSpaceCode)} className="p-6 pt-2 space-y-4">
+          <form onSubmit={submitCode(onUpdateSpaceCode, onFormValidationError)} className="p-6 pt-2 space-y-4">
             <p className="text-sm text-slate-600">Company: <strong>{editTarget.name}</strong></p>
             <Input label="New Space code (8 characters)" error={errCode.spaceCode?.message}
               {...regCode('spaceCode', {

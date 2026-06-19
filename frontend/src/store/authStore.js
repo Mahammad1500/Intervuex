@@ -21,6 +21,28 @@ const useAuthStore = create(
 
       login: async (email, password) => {
         set({ isLoading: true, error: null });
+        if (import.meta.env.VITE_UI_DEMO_MODE === 'true') {
+          try {
+            const { demoLoginWithCredentials } = await import('../demo/demoAuth');
+            const result = demoLoginWithCredentials(email, password);
+            if (result.success) {
+              api.defaults.headers.common['Authorization'] = 'Bearer demo-token';
+              set({
+                user: result.user,
+                accessToken: 'demo-token',
+                refreshToken: 'demo-refresh',
+                isAuthenticated: true,
+                isLoading: false,
+              });
+              return { success: true };
+            }
+            set({ isLoading: false, error: result.message });
+            return { success: false, message: result.message };
+          } catch (err) {
+            set({ isLoading: false, error: 'Demo login failed.' });
+            return { success: false, message: 'Demo login failed.' };
+          }
+        }
         try {
           const response = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
           const { user, accessToken, refreshToken } = response.data.data;
@@ -55,7 +77,32 @@ const useAuthStore = create(
         try { await api.post('/auth/logout'); } catch (_) {}
       },
 
+      demoEnterAs: async (roleKey) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { demoLoginAsRole } = await import('../demo/demoAuth');
+          const result = demoLoginAsRole(roleKey);
+          if (result.success) {
+            api.defaults.headers.common['Authorization'] = 'Bearer demo-token';
+            set({
+              user: result.user,
+              accessToken: 'demo-token',
+              refreshToken: 'demo-refresh',
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            return { success: true };
+          }
+          set({ isLoading: false, error: result.message });
+          return { success: false, message: result.message };
+        } catch (_) {
+          set({ isLoading: false, error: 'Demo login failed.' });
+          return { success: false, message: 'Demo login failed.' };
+        }
+      },
+
       refreshAccessToken: async () => {
+        if (import.meta.env.VITE_UI_DEMO_MODE === 'true') return true;
         const { refreshToken } = get();
         if (!refreshToken) return false;
         try {

@@ -564,111 +564,59 @@ cd backend && npm test
 
 ---
 
-## 🚀 Deploy public demo (browse-only) — step by step
+## 🚀 Deploy public demo (UI preview) — recommended
 
-**Goal:** A second URL where visitors log in with `admin@intervuex.com` / `12345678`, explore the full UI, but **cannot change anything**. Your production site stays private and untouched.
+**Goal:** Visitors open a demo URL, see **Admin** and **HR** credentials on the login page, click to enter, and browse the full UI with **sample data**. No backend, no database, production untouched.
 
-### Same repo or new repo?
+### Recommended: UI-only demo (Vercel only)
 
-| Approach | Recommendation |
-|----------|----------------|
-| **Same GitHub repo, two deployments** | ✅ **Use this** — one codebase, two Vercel projects + two Railway services + two databases |
-| New GitHub repo | ❌ Not needed — duplicates code and is harder to maintain |
+| | **Production** | **UI demo** |
+|--|----------------|-------------|
+| Vercel | `intervuex-nine.vercel.app` | `intervuex-demo.vercel.app` (new project) |
+| Railway | ✅ Yes | ❌ **Not needed** |
+| MongoDB | ✅ Yes | ❌ **Not needed** |
+| Login | Your real email | `admin@intervuex.com` / `12345678` (shown on page) |
+| Data | Real | Sample data built into frontend |
 
-```
-                    ONE GitHub repo (Intervuex)
-                              │
-              ┌───────────────┴───────────────┐
-              ▼                               ▼
-     PRODUCTION (private)              DEMO (public portfolio)
-     ─────────────────────             ──────────────────────
-     Vercel: intervuex-nine...         Vercel: intervuex-demo... (new project)
-     Railway: current service          Railway: NEW service (second project)
-     MongoDB: intervuex                 MongoDB: intervuex_demo (separate DB)
-     Your email login                  admin@intervuex.com / 12345678
-     Demo flags: OFF                   Demo flags: ON + read-only
-```
+**Steps:**
 
-### Why two databases?
-
-Even with read-only code, a **separate `intervuex_demo` database** guarantees visitors never touch your real users, companies, or interviews.
-
-### Step 1 — MongoDB Atlas: create demo database
-
-1. Atlas → your cluster → no new cluster needed
-2. Use the **same connection string** but change the database name at the end:
-   - Production: `...mongodb.net/intervuex`
-   - Demo: `...mongodb.net/intervuex_demo`
-3. Demo DB starts **empty** — demo backend auto-seeds demo users on first start (`ALLOW_DEMO_USERS=true`)
-
-### Step 2 — Railway: second backend (demo API)
-
-1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub** → **Intervuex**
-2. **Root directory:** `backend`
-3. **Variables** (copy from production, then change these):
-
-| Variable | Demo value |
-|----------|------------|
-| `NODE_ENV` | `production` |
-| `MONGODB_URI` | `...mongodb.net/intervuex_demo` |
-| `JWT_SECRET` | New random secret (different from production) |
-| `JWT_REFRESH_SECRET` | New random secret |
-| `CLIENT_URL` | Your **demo** Vercel URL (set after Step 3) |
-| `ALLOW_DEMO_USERS` | `true` |
-| `DEMO_READ_ONLY_MODE` | `true` |
-| `DEMO_VIEW_ONLY_EMAILS` | `admin@intervuex.com,hr@intervuex.com` |
-
-4. Deploy → copy URL, e.g. `https://intervuex-demo.up.railway.app`
-5. Test: `curl https://YOUR-DEMO-API.railway.app/api/health`
-
-### Step 3 — Vercel: second frontend (demo site)
-
-1. [vercel.com](https://vercel.com) → **Add New Project** → import **same** Intervuex repo
-2. **Project name:** e.g. `intervuex-demo` (different from production)
-3. **Root directory:** `frontend`
-4. **Environment variables:**
+1. [vercel.com](https://vercel.com) → **Add New Project** → same **Intervuex** repo  
+2. Name: `intervuex-demo` · Root directory: **`frontend`**  
+3. Environment variable:
 
 | Name | Value |
 |------|--------|
-| `VITE_API_URL` | `https://YOUR-DEMO-API.railway.app/api` |
-| `VITE_SHOW_DEMO_LOGIN` | `true` |
-| `VITE_DEMO_VIEW_EMAILS` | `admin@intervuex.com,hr@intervuex.com` |
+| `VITE_UI_DEMO_MODE` | `true` |
 
-5. Deploy → copy URL, e.g. `https://intervuex-demo.vercel.app`
+4. Deploy → open login page → click **Admin** or **HR** card (email + password visible)  
+5. Browse Dashboard, Workspaces, Pipeline, etc. — all sample data; saves blocked  
 
-### Step 4 — Link demo backend ↔ demo frontend
-
-1. Railway demo service → `CLIENT_URL` = exact demo Vercel URL (no trailing slash)
-2. Redeploy Railway
-
-### Step 5 — Seed demo data (optional, richer UI)
-
-Demo DB auto-creates admin + HR on empty DB. For sample interviews/workspaces, run locally against demo URI or add data via MongoDB Compass.
-
-**Demo login (public site only):**
+**Demo credentials (shown on login page):**
 
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | `admin@intervuex.com` | `12345678` |
 | HR | `hr@intervuex.com` | `12345678` |
 
-Login page shows **“Live demo — click to sign in”** buttons. A banner says browse-only. Any create/edit/delete returns **403 Demo account is view-only**.
+---
 
-### Step 6 — Keep production safe
+### Optional: full-stack demo (Railway + MongoDB)
 
-On **production** Railway + Vercel, confirm:
+Use this only if you need **real API** with read-only demo accounts. Same repo, second Railway service + `intervuex_demo` database. See [`frontend/.env.example`](frontend/.env.example) for `VITE_SHOW_DEMO_LOGIN` instead of `VITE_UI_DEMO_MODE`.
 
-| Variable | Production value |
-|----------|------------------|
-| `ALLOW_DEMO_USERS` | unset or `false` |
-| `DEMO_READ_ONLY_MODE` | unset or `false` |
-| `VITE_SHOW_DEMO_LOGIN` | unset or `false` |
+<details>
+<summary>Full-stack demo steps (click to expand)</summary>
 
-Production URL: only **your** real admin email — no public demo buttons.
+```
+ONE GitHub repo → Production (Vercel + Railway + intervuex)
+               → Demo (Vercel + Railway + intervuex_demo)
+```
 
-### Step 7 — Update README live links
+1. Atlas: database `intervuex_demo` on same cluster  
+2. Railway: new project, root `backend`, set `ALLOW_DEMO_USERS=true`, `DEMO_READ_ONLY_MODE=true`  
+3. Vercel demo: `VITE_API_URL`, `VITE_SHOW_DEMO_LOGIN=true`  
 
-Add demo URL at top of README next to production link when demo is live.
+</details>
 
 ---
 
