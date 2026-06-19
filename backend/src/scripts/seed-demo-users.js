@@ -48,7 +48,7 @@ async function seedDemoUsers() {
       firstName: 'Admin',
       lastName: 'User',
       email: 'admin@intervuex.com',
-      password: 'Admin@12345',
+      password: '12345678',
       role: 'admin',
       isActive: true,
     });
@@ -71,7 +71,7 @@ async function seedDemoUsers() {
         firstName: 'HR',
         lastName: 'Manager',
         email: 'hr@intervuex.com',
-        password: 'Hr@123456',
+        password: '12345678',
         role: 'hr',
         companyId: company._id,
         isActive: true,

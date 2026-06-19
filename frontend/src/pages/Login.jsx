@@ -46,8 +46,8 @@ export default function Login() {
   const isLiveDemo = import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true' && !import.meta.env.DEV;
 
   const demoAccounts = [
-    { role: 'Admin', email: 'admin@intervuex.com', password: 'Admin@12345' },
-    { role: 'HR', email: 'hr@intervuex.com', password: 'Hr@123456' },
+    { role: 'Admin', email: 'admin@intervuex.com', password: '12345678' },
+    { role: 'HR', email: 'hr@intervuex.com', password: '12345678' },
   ];
 
   return (

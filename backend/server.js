@@ -79,12 +79,12 @@ app.post('/api/seed', async (req, res) => {
     if (!adminUser) {
       adminUser = new User({
         firstName: 'Admin', lastName: 'User', email: 'admin@intervuex.com',
-        password: 'Admin@12345', role: 'admin', department: 'Engineering',
+        password: '12345678', role: 'admin', department: 'Engineering',
         jobTitle: 'Platform Admin', isActive: true, isEmailVerified: true,
       });
       await adminUser.save();
     } else {
-      adminUser.password = 'Admin@12345';
+      adminUser.password = '12345678';
       adminUser.role = 'admin';
       adminUser.isActive = true;
       adminUser.isEmailVerified = true;
@@ -104,13 +104,13 @@ app.post('/api/seed', async (req, res) => {
     if (!hrUser) {
       hrUser = new User({
         firstName: 'Sarah', lastName: 'Johnson', email: 'hr@intervuex.com',
-        password: 'Hr@123456', role: 'hr', department: 'Human Resources',
+        password: '12345678', role: 'hr', department: 'Human Resources',
         jobTitle: 'HR Manager', isActive: true, isEmailVerified: true,
         companyId: company._id,
       });
       await hrUser.save();
     } else {
-      hrUser.password = 'Hr@123456';
+      hrUser.password = '12345678';
       hrUser.role = 'hr';
       hrUser.companyId = company._id;
       hrUser.isActive = true;

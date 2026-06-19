@@ -18,7 +18,7 @@ const seedDemoUsers = async () => {
         firstName: 'Admin',
         lastName: 'User',
         email: 'admin@intervuex.com',
-        password: 'Admin@12345',
+        password: '12345678',
         role: 'admin',
         isActive: true,
       });
@@ -35,7 +35,7 @@ const seedDemoUsers = async () => {
         firstName: 'HR',
         lastName: 'Manager',
         email: 'hr@intervuex.com',
-        password: 'Hr@123456',
+        password: '12345678',
         role: 'hr',
         companyId: company._id,
         isActive: true,
@@ -43,8 +43,8 @@ const seedDemoUsers = async () => {
 
       logger.info('✅ Demo users created successfully');
       logger.info('📋 Demo Accounts:');
-      logger.info('   Admin: admin@intervuex.com / Admin@12345');
-      logger.info('   HR:    hr@intervuex.com / Hr@123456');
+      logger.info('   Admin: admin@intervuex.com / 12345678');
+      logger.info('   HR:    hr@intervuex.com / 12345678');
     }
   } catch (err) {
     logger.warn(`Could not seed demo users: ${err.message}`);

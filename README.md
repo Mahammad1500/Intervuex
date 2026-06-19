@@ -292,23 +292,28 @@ intervuex/
 
 ---
 
-## 👥 Role-Based Access Control
+## 👥 Role-Based Access Control (actual — login accounts only)
 
-| Feature | Admin | HR | Interviewer | Candidate |
-|---------|:-----:|:--:|:-----------:|:---------:|
-| View own interviews | ✅ | ✅ | ✅ | ✅ |
-| Schedule interview | ✅ | ✅ | ❌ | ❌ |
-| Cancel interview | ✅ | ✅ | ❌ | ❌ |
-| Reschedule interview | ✅ | ✅ | ❌ | ✅ |
-| Confirm attendance | ❌ | ❌ | ❌ | ✅ |
-| Submit feedback | ✅ | ❌ | ✅ | ❌ |
-| View all interviews | ✅ | ✅* | ❌ | ❌ |
-| User management | ✅ | ✅* | ❌ | ❌ |
-| Analytics dashboard | ✅ | ✅ | ✅* | ❌ |
-| Connect calendar | ✅ | ✅ | ✅ | ❌ |
-| Toggle user status | ✅ | ❌ | ❌ | ❌ |
+Intervuex has **two login roles**: **Admin** and **HR**. There are **no** Interviewer or Candidate login accounts.
 
-*Limited scope — HR sees only their scheduled interviews/users
+“Interviewer” and “Candidate” in old docs meant **email addresses on an interview record** — those people get emails but do **not** sign in to the app.
+
+| Feature | Admin | HR |
+|---------|:-----:|:--:|
+| Dashboard & analytics | ✅ | ✅ (own company) |
+| Workspaces (create companies, Space codes) | ✅ | ❌ |
+| Team / user management | ✅ | ❌ |
+| Audit log | ✅ | ❌ |
+| Schedule interview | ✅ | ✅ |
+| Cancel / reschedule interview | ✅ | ✅ |
+| View interviews & pipeline | ✅ | ✅ (own company) |
+| Panel interviewers (emails on a round) | ✅ | ✅ |
+| Settings (profile, password) | ✅ | ✅ |
+| Toggle user active/inactive | ✅ | ❌ |
+
+**HR scope:** HR only sees data for their **workspace** (`companyId`). Admin sees the whole platform.
+
+**Public demo site:** When deployed with `DEMO_READ_ONLY_MODE=true`, demo accounts (`admin@intervuex.com`, `hr@intervuex.com`) can **browse every page** but **cannot** create, edit, or delete anything (blocked on the API).
 
 ---
 
@@ -328,23 +333,27 @@ intervuex/
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/interviews` | Schedule new interview |
-| GET | `/api/interviews` | List interviews (filtered) |
+| GET | `/api/interviews` | List interviews (filtered by role/company) |
 | GET | `/api/interviews/upcoming` | Get upcoming interviews |
 | GET | `/api/interviews/:id` | Get interview detail |
+| PATCH | `/api/interviews/:id` | Update interview |
 | PATCH | `/api/interviews/:id/cancel` | Cancel interview |
 | POST | `/api/interviews/:id/reschedule` | Reschedule interview |
-| PATCH | `/api/interviews/:id/confirm` | Candidate confirms attendance |
+| GET | `/api/interviews/confirm/:token` | Public attendance confirm link (email token) |
 
-### Calendar
+### Companies / Workspaces (admin)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/calendar/google/auth-url` | Get Google OAuth URL |
-| GET | `/api/calendar/google/callback` | Handle Google OAuth callback |
-| GET | `/api/calendar/microsoft/auth-url` | Get Microsoft OAuth URL |
-| GET | `/api/calendar/microsoft/callback` | Handle Microsoft OAuth callback |
-| DELETE | `/api/calendar/disconnect/:provider` | Disconnect calendar |
-| GET | `/api/calendar/availability` | Get available time slots |
-| GET | `/api/calendar/status` | Get connection status |
+| GET | `/api/companies` | List all workspaces (admin) |
+| POST | `/api/companies` | Create workspace |
+| GET | `/api/companies/workspace` | Current user’s workspace |
+| PATCH | `/api/companies/:id/space-code` | Regenerate Space code |
+| DELETE | `/api/companies/:id` | Delete workspace |
+
+### Audit (admin)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/audit` | Admin audit log |
 
 ### Analytics
 | Method | Endpoint | Description |
@@ -555,29 +564,111 @@ cd backend && npm test
 
 ---
 
-## 🌐 Production vs demo (two links)
+## 🚀 Deploy public demo (browse-only) — step by step
 
-Use **two deployments** from the **same GitHub repo** — do not mix public demo with your real data.
+**Goal:** A second URL where visitors log in with `admin@intervuex.com` / `12345678`, explore the full UI, but **cannot change anything**. Your production site stays private and untouched.
 
-| | **Production** (you) | **Public demo** (visitors) |
-|--|----------------------|----------------------------|
-| **Purpose** | Your real admin / HR work | Portfolio — browse UI only |
-| **Vercel** | `intervuex-nine.vercel.app` | New project e.g. `intervuex-demo.vercel.app` |
-| **Railway** | Current backend | **Second** backend service (recommended) |
-| **MongoDB** | Database `intervuex` | Database `intervuex_demo` (separate data) |
-| **Your login** | `mahammadhussain1500@gmail.com` | Not used on demo site |
-| **Demo login** | **OFF** | Admin / HR demo buttons, **view-only** |
-| **Vercel vars** | `VITE_SHOW_DEMO_LOGIN` unset/false | `VITE_SHOW_DEMO_LOGIN=true` |
-| **Railway vars** | No demo flags | `ALLOW_DEMO_USERS=true`, `DEMO_READ_ONLY_MODE=true` |
+### Same repo or new repo?
 
-**Why two databases?** Even with view-only code, a separate `intervuex_demo` database guarantees visitors never touch your production users or interviews.
+| Approach | Recommendation |
+|----------|----------------|
+| **Same GitHub repo, two deployments** | ✅ **Use this** — one codebase, two Vercel projects + two Railway services + two databases |
+| New GitHub repo | ❌ Not needed — duplicates code and is harder to maintain |
 
-**Demo credentials** (demo site only — browse all pages, cannot create/edit/delete):
+```
+                    ONE GitHub repo (Intervuex)
+                              │
+              ┌───────────────┴───────────────┐
+              ▼                               ▼
+     PRODUCTION (private)              DEMO (public portfolio)
+     ─────────────────────             ──────────────────────
+     Vercel: intervuex-nine...         Vercel: intervuex-demo... (new project)
+     Railway: current service          Railway: NEW service (second project)
+     MongoDB: intervuex                 MongoDB: intervuex_demo (separate DB)
+     Your email login                  admin@intervuex.com / 12345678
+     Demo flags: OFF                   Demo flags: ON + read-only
+```
+
+### Why two databases?
+
+Even with read-only code, a **separate `intervuex_demo` database** guarantees visitors never touch your real users, companies, or interviews.
+
+### Step 1 — MongoDB Atlas: create demo database
+
+1. Atlas → your cluster → no new cluster needed
+2. Use the **same connection string** but change the database name at the end:
+   - Production: `...mongodb.net/intervuex`
+   - Demo: `...mongodb.net/intervuex_demo`
+3. Demo DB starts **empty** — demo backend auto-seeds demo users on first start (`ALLOW_DEMO_USERS=true`)
+
+### Step 2 — Railway: second backend (demo API)
+
+1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub** → **Intervuex**
+2. **Root directory:** `backend`
+3. **Variables** (copy from production, then change these):
+
+| Variable | Demo value |
+|----------|------------|
+| `NODE_ENV` | `production` |
+| `MONGODB_URI` | `...mongodb.net/intervuex_demo` |
+| `JWT_SECRET` | New random secret (different from production) |
+| `JWT_REFRESH_SECRET` | New random secret |
+| `CLIENT_URL` | Your **demo** Vercel URL (set after Step 3) |
+| `ALLOW_DEMO_USERS` | `true` |
+| `DEMO_READ_ONLY_MODE` | `true` |
+| `DEMO_VIEW_ONLY_EMAILS` | `admin@intervuex.com,hr@intervuex.com` |
+
+4. Deploy → copy URL, e.g. `https://intervuex-demo.up.railway.app`
+5. Test: `curl https://YOUR-DEMO-API.railway.app/api/health`
+
+### Step 3 — Vercel: second frontend (demo site)
+
+1. [vercel.com](https://vercel.com) → **Add New Project** → import **same** Intervuex repo
+2. **Project name:** e.g. `intervuex-demo` (different from production)
+3. **Root directory:** `frontend`
+4. **Environment variables:**
+
+| Name | Value |
+|------|--------|
+| `VITE_API_URL` | `https://YOUR-DEMO-API.railway.app/api` |
+| `VITE_SHOW_DEMO_LOGIN` | `true` |
+| `VITE_DEMO_VIEW_EMAILS` | `admin@intervuex.com,hr@intervuex.com` |
+
+5. Deploy → copy URL, e.g. `https://intervuex-demo.vercel.app`
+
+### Step 4 — Link demo backend ↔ demo frontend
+
+1. Railway demo service → `CLIENT_URL` = exact demo Vercel URL (no trailing slash)
+2. Redeploy Railway
+
+### Step 5 — Seed demo data (optional, richer UI)
+
+Demo DB auto-creates admin + HR on empty DB. For sample interviews/workspaces, run locally against demo URI or add data via MongoDB Compass.
+
+**Demo login (public site only):**
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@intervuex.com` | See login page or README after demo deploy |
-| HR | `hr@intervuex.com` | See login page or README after demo deploy |
+| Admin | `admin@intervuex.com` | `12345678` |
+| HR | `hr@intervuex.com` | `12345678` |
+
+Login page shows **“Live demo — click to sign in”** buttons. A banner says browse-only. Any create/edit/delete returns **403 Demo account is view-only**.
+
+### Step 6 — Keep production safe
+
+On **production** Railway + Vercel, confirm:
+
+| Variable | Production value |
+|----------|------------------|
+| `ALLOW_DEMO_USERS` | unset or `false` |
+| `DEMO_READ_ONLY_MODE` | unset or `false` |
+| `VITE_SHOW_DEMO_LOGIN` | unset or `false` |
+
+Production URL: only **your** real admin email — no public demo buttons.
+
+### Step 7 — Update README live links
+
+Add demo URL at top of README next to production link when demo is live.
 
 ---
 
@@ -665,8 +756,8 @@ For the **public demo site** — not your production URL:
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@intervuex.com` | `Admin@12345` |
-| HR | `hr@intervuex.com` | `Hr@123456` |
+| Admin | `admin@intervuex.com` | `12345678` |
+| HR | `hr@intervuex.com` | `12345678` |
 
 Enable with Railway `ALLOW_DEMO_USERS=true` + `DEMO_READ_ONLY_MODE=true` and Vercel `VITE_SHOW_DEMO_LOGIN=true`.  
 **Turn demo OFF on production** (`intervuex-nine.vercel.app`) — use only your personal admin login there.
