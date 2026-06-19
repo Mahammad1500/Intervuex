@@ -686,8 +686,95 @@ Short answers; **full learning guide:** open **`INTERVUEX_GUIDE.md`** in the pro
 | Where is my data in Atlas? | Database **`intervuex`**, not `sample_mflix` (sample movies are unrelated) |
 | Company workspace? | Admin → **Workspaces** → create company + Space code; HR joins via `/register?code=…` or Team |
 | Demo passwords on login? | Shown on live site when `VITE_SHOW_DEMO_LOGIN=true`; view-only when `DEMO_READ_ONLY_MODE=true` |
+| Why did production work after deleting GitHub? | Vercel/Railway keep running last deploy; data is in Atlas, not GitHub — see [How production works](#-how-production-works-read-this-first) |
+| Do I need to reconnect Vercel/Railway? | Only if deploy fails or `git push` does not trigger redeploy |
 
 **Your app collections:** `intervuex` → `users`, `companies`, `interviews`, …
+
+---
+
+## 🏗 How production works (read this first)
+
+Intervuex in production is **four separate services**. They talk to each other, but **deleting or recreating GitHub does not stop the live site**.
+
+```
+┌─────────────┐     push code      ┌──────────────┐
+│   GitHub    │ ─────────────────► │    Vercel    │  hosts React UI (frontend)
+│  (storage)  │                    │  intervuex-  │  https://intervuex-nine.vercel.app
+└─────────────┘                    │  nine...     │
+       │                           └──────┬───────┘
+       │ push code                         │ API calls (VITE_API_URL)
+       ▼                                   ▼
+┌─────────────┐                    ┌──────────────┐
+│   Railway   │ ◄── MONGODB_URI ──►│ MongoDB Atlas│  your data lives here
+│  (backend)  │                    │  database:   │  NOT on GitHub
+│  Node API   │                    │  intervuex   │
+└─────────────┘                    └──────────────┘
+  ...railway.app/api/health
+```
+
+| Piece | What it does | Your URL |
+|-------|----------------|----------|
+| **GitHub** | Stores source code and git history | [github.com/Mahammad1500/Intervuex](https://github.com/Mahammad1500/Intervuex) |
+| **Vercel** | Builds `frontend/` and serves the website | [intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) |
+| **Railway** | Runs `backend/` Node server 24/7 | [intervuex-production-5e78.up.railway.app](https://intervuex-production-5e78.up.railway.app) |
+| **MongoDB Atlas** | Stores users, companies, interviews | Cloud database `intervuex` |
+
+### Why the app still worked after you recreated GitHub
+
+You deleted GitHub and made a new repo with the **same name**, then we pushed the same code again. **Vercel and Railway kept working** because:
+
+1. **They already deployed your code** — Vercel and Railway run copies of your app on *their* servers. Those copies keep running until you redeploy or delete the project. Deleting GitHub does **not** turn off Vercel or Railway.
+2. **Your data is in MongoDB Atlas** — users and interviews are **not** stored on GitHub. Recreating the repo did **not** wipe your database.
+3. **Same repo name** — Vercel/Railway often still point at `Mahammad1500/Intervuex`. When we pushed again, they may auto-deploy, or they keep serving the **last successful deploy** (your screenshot showed a deploy from ~18h ago — that build is still live and valid).
+4. **Same commit content** — the code we pushed is identical to what was deployed before, so nothing broke.
+
+**Conclusion:** You did **not** need to reconnect for the site to keep working. Reconnect is only needed if Vercel/Railway show **disconnected**, **failed deploy**, or **future `git push` does not trigger a new deploy**.
+
+### When you *do* need to reconnect Vercel or Railway
+
+| Symptom | What to do |
+|---------|------------|
+| `git push` but Vercel/Railway never redeploy | Settings → Git/Source → reconnect `Mahammad1500/Intervuex` |
+| Vercel dashboard shows “Repository not found” | Re-import or reconnect GitHub repo |
+| Login works locally but production shows network error | Check Railway is running + `VITE_API_URL` on Vercel |
+| CORS / blocked request after changing domain | Railway → set `CLIENT_URL` to exact Vercel URL, redeploy |
+
+### How a code change reaches production (normal flow)
+
+1. You edit code on your Mac (Cursor or any editor).
+2. You commit and push from **Terminal** (not Cursor’s Commit button):
+   ```bash
+   cd ~/Projects/Intervuex
+   git add .
+   git commit -m "feat: your change"
+   git push origin main
+   ```
+3. **Vercel** sees the push → rebuilds `frontend/` → updates the website (usually 1–2 min).
+4. **Railway** sees the push → rebuilds `backend/` → restarts the API (usually 2–5 min).
+5. **Atlas** is unchanged — same database, new code talks to old data.
+
+### Quick health checks (run anytime)
+
+```bash
+# Backend alive + database connected?
+curl -s https://intervuex-production-5e78.up.railway.app/api/health
+
+# Frontend responding?
+curl -s -o /dev/null -w "%{http_code}\n" https://intervuex-nine.vercel.app/
+```
+
+Expected: health JSON with `"status":"ok"` and `"database":"connected"`; frontend returns `200`.
+
+### Environment variables (where secrets live)
+
+| Where | Key variables | Purpose |
+|-------|----------------|---------|
+| **Railway** (backend) | `MONGODB_URI`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CLIENT_URL`, `NODE_ENV=production` | Server secrets, DB connection, CORS |
+| **Vercel** (frontend) | `VITE_API_URL=https://intervuex-production-5e78.up.railway.app/api` | Tells React where the API is |
+| **Your Mac** | `backend/.env`, `frontend/.env` | Local development only — never commit these |
+
+**Rule:** Secrets go in Railway/Vercel dashboards or local `.env` files — **never** in GitHub.
 
 ---
 
@@ -759,7 +846,26 @@ App → http://localhost:3000 · API → http://localhost:5000/api/health
 
 **Never commit:** `backend/.env`, `frontend/.env` — secrets stay on your machine or in Railway/Vercel dashboards only.
 
-## 🤝 Contributing
+### ✅ Current production status (your project)
+
+| Check | Status |
+|-------|--------|
+| GitHub repo | [Mahammad1500/Intervuex](https://github.com/Mahammad1500/Intervuex) — fresh repo, **only your commits** |
+| Vercel frontend | [intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) — **Ready** (Production) |
+| Railway backend | `/api/health` → **ok**, database **connected** |
+| Reconnect Vercel/Railway? | **Not required** if site + health check work (see [Why the app still worked](#why-the-app-still-worked-after-you-recreated-github)) |
+
+### What to do now (in order)
+
+1. **GitHub** — Open repo in Incognito → Contributors should show **only you** (no `cursoragent`).
+2. **Production login** — Go to [intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) → sign in with **your admin email** (`mahammadhussain1500@gmail.com`).
+3. **Smoke test** — Click **Workspaces**, **Team**, **Schedule** (create one test interview), **Pipeline** — confirm pages load and data saves.
+4. **Optional: verify auto-deploy** — Make a tiny change (e.g. edit README), push from Terminal, watch Vercel **Deployments** for a new build within ~2 minutes.
+5. **Future commits** — Always use Terminal (`git commit` / `git push`), not Cursor’s Commit button. Keep **Commit Attribution OFF** in Cursor settings.
+
+**We have not run a full manual test checklist yet** — step 3 above is the first real end-to-end test of features on production.
+
+---
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
