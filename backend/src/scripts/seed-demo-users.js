@@ -88,8 +88,8 @@ async function seedDemoUsers() {
     console.log('│ Role       │ Email                        │ Password     │');
     console.log('├────────────┼──────────────────────────────┼──────────────┤');
     const allAccounts = [
-      { role: 'admin', email: 'admin@intervuex.com', password: 'Admin@12345' },
-      { role: 'hr', email: 'hr@intervuex.com', password: 'Hr@123456' },
+      { role: 'admin', email: 'admin@intervuex.com', password: '12345678' },
+      { role: 'hr', email: 'hr@intervuex.com', password: '12345678' },
     ];
     allAccounts.forEach(user => {
       const role = user.role.charAt(0).toUpperCase() + user.role.slice(1);
