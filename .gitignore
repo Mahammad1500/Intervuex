@@ -55,3 +55,4 @@ coverage/
 # Root markdown: only README is published; rest are local learning/deploy notes
 /*.md
 !README.md
+docs/*.md
