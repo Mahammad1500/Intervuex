@@ -1,87 +1,64 @@
 # Intervuex
 
-Intervuex is a full stack interview scheduling application for hiring teams. Company admins create workspaces and manage HR users. HR staff schedule interviews, move candidates through a pipeline, and view analytics. The product supports panel interviews, scheduling conflict checks, and optional email notifications.
+Intervuex is a full stack interview scheduling application for hiring teams. Company admins create workspaces and manage HR users. HR staff schedule interviews, track candidates in a pipeline, and view analytics.
 
-Only **Admin** and **HR** roles can log in. Candidate and interviewer emails are stored on each interview record; those people are not app users.
+Sign in is for **Admin** and **HR** only. Candidates and interviewers are email addresses on each interview; they do not log in to the app.
 
 ---
 
 ## Live application
 
-Both links below are public on the internet. Anyone can open them in a browser.
+These URLs are public. Anyone can open them in a browser.
 
-### 1. Production website (full application)
+### Production (full app)
 
-**URL:** https://intervuex-nine.vercel.app
+**https://intervuex-nine.vercel.app**
 
-This is the main live deployment. The React frontend runs on Vercel. The API runs on Railway. Data is stored in MongoDB Atlas.
+The main live deployment: React on Vercel, API on Railway, data in MongoDB Atlas.
 
-**What you will see when you open it:**
+Open this link to see the landing page and login screen. After sign in, Admin and HR users can manage workspaces, schedule interviews, and use the pipeline. New HR users can register with a workspace Space code from their company admin.
 
-- The **landing page** with product information
-- A **login page** for Admin and HR accounts
-- After sign in: dashboard, workspaces, scheduling, pipeline, analytics (based on role)
+### UI demo (preview)
 
-**How to sign in:** Use an Admin or HR account that already exists in the system. HR users can also **register** if they have a workspace **Space code** from their company admin.
+**https://intervuex-demo.vercel.app**
 
-This is a real running application, not a mockup.
+A read-only style preview with sample data. No database required.
 
----
+1. Open the link  
+2. On login, click **Admin** or **HR**  
+3. Explore the interface  
 
-### 2. UI demo (try the interface)
+Demo login (shown on the site): `admin@intervuex.com` / `12345678`
 
-**URL:** https://intervuex-demo.vercel.app
+### API health
 
-This is a separate deployment for visitors who want to **explore the UI** without a real account or database.
+**https://intervuex-production-5e78.up.railway.app/api/health**
 
-**What you will see:**
-
-- The same login and app screens as production
-- **Admin** and **HR** buttons on the login page with demo credentials visible
-- Sample companies, interviews, and charts (fake data built into the frontend)
-
-**How to try it:**
-
-1. Open the link above  
-2. On the login page, click **Admin** or **HR**  
-3. Browse dashboards, workspaces, pipeline, and other pages  
-4. Saving or editing data is disabled in preview mode  
-
-Demo credentials (also shown on the site): `admin@intervuex.com` / `12345678`
-
----
-
-### 3. API health check (backend status)
-
-**URL:** https://intervuex-production-5e78.up.railway.app/api/health
-
-This is not a web page for end users. It returns a small JSON response from the production API.
-
-**What to check:**
-
-- `"status": "ok"` means the API server is running  
-- `"database": "connected"` means MongoDB is reachable  
-
-Use this link to confirm the backend is online after deployment or troubleshooting.
+Returns JSON, not a normal web page. If you see `"status":"ok"` and `"database":"connected"`, the production API and database are running.
 
 ---
 
 ## Features
 
 **Workspaces**  
-Admins create a company workspace and receive an 8 character Space code. HR joins with that code or is added from the Team page.
+Admins create company workspaces with an 8 character Space code. HR joins via code or is added from Team.
 
-**Scheduling**  
-Four step wizard: people and role, date and time (conflict check), meeting link, review. Supports a lead interviewer and optional panel emails. Paste a Zoom, Meet, Teams, or other meeting URL.
+**Interview scheduling**  
+Four step wizard: details, date and time, meeting link, review. Panel interviewers supported. The system checks MongoDB for overlapping interviews before saving.
+
+**Meeting links**  
+In the live app, HR selects **Meeting link** and pastes a URL from Zoom, Google Meet, Microsoft Teams, or any provider. The link is stored on the interview and shown in the pipeline and emails.
+
+The codebase also includes **Google Meet auto generation**: the backend can create a Meet link through the Google Calendar API (`conferenceData` on a calendar event) when Google Calendar is connected and that flow is enabled. See `backend/src/services/meetingGenerationService.js`. The current schedule wizard uses manual links for simplicity on production.
 
 **Pipeline and analytics**  
-Kanban pipeline by interview status. Dashboards and charts for hiring activity.
+Kanban board by status. Dashboards and charts for hiring activity.
 
-**Admin tools**  
-Team management, audit log, settings, light and dark theme.
+**Admin**  
+Team, audit log, settings, light/dark theme.
 
-**Optional**  
-SMTP email and Google sign-in when configured in environment variables (see `backend/.env.example`).
+**Email and sign in (optional)**  
+SMTP for invitations and reminders. Google account sign in when OAuth variables are set (`backend/.env.example`).
 
 ---
 
@@ -103,11 +80,11 @@ Login
 
 ![Login](./docs/screenshots/02-login.png)
 
-HR registration with Space code
+Register
 
 ![Register](./docs/screenshots/02b-register.png)
 
-### Admin views
+### Admin
 
 Dashboard
 
@@ -121,11 +98,11 @@ Team
 
 ![Team](./docs/screenshots/05-team.png)
 
-Schedule with panel interviewers
+Schedule (panel)
 
 ![Schedule panel](./docs/screenshots/06-schedule-panel.png)
 
-Schedule review step
+Schedule review
 
 ![Schedule review](./docs/screenshots/06b-schedule-review.png)
 
@@ -141,13 +118,13 @@ Settings
 
 ![Admin settings](./docs/screenshots/10-settings-admin.png)
 
-### HR views
+### HR
 
 Dashboard
 
 ![HR dashboard](./docs/screenshots/08-hr-dashboard.png)
 
-Interviews list
+Interviews
 
 ![HR interviews](./docs/screenshots/11-hr-interviews.png)
 
@@ -169,70 +146,32 @@ Settings
 
 ---
 
-## Run locally (developers)
+## Run locally
 
-**Step 1.** Clone the repository
+Requires Node.js 18+ and MongoDB (local or Atlas).
 
 ```bash
 git clone https://github.com/Mahammad1500/Intervuex.git
 cd Intervuex
-```
-
-**Step 2.** Install dependencies
-
-```bash
 npm run install:all
-```
-
-**Step 3.** Create environment files
-
-```bash
 npm run setup:env
 ```
 
-Copy values into `backend/.env` and `frontend/.env` from the `.env.example` files in each folder. You need at least `MONGODB_URI`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` on the backend, and `VITE_API_URL` on the frontend.
-
-**Step 4.** Start the app
+Edit `backend/.env` and `frontend/.env` using the `.env.example` files in each folder.
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser.  
-API health: http://localhost:5000/api/health
+App: http://localhost:3000  
+Health: http://localhost:5000/api/health  
 
-**Step 5 (optional).** Seed demo users for local testing only
-
-```bash
-curl -X POST http://localhost:5000/api/seed
-```
-
-**Step 6 (optional).** Run automated tests
-
-```bash
-npm test
-```
-
----
-
-## Deploy to production (developers)
-
-**Step 1.** Push this repository to GitHub.
-
-**Step 2.** Create a Railway project. Set root directory to `backend`. Add environment variables from `backend/.env.example`.
-
-**Step 3.** Create a Vercel project. Set root directory to `frontend`. Set `VITE_API_URL` to your Railway URL plus `/api`.
-
-**Step 4.** Set Railway `CLIENT_URL` to your Vercel frontend URL.
-
-**Step 5.** Use MongoDB Atlas with database name `intervuex`.
-
-For a public UI demo only, create a second Vercel project with `VITE_UI_DEMO_MODE=true`. No Railway or database required for that demo.
-
-Never commit `.env` files to GitHub.
+Optional: `curl -X POST http://localhost:5000/api/seed` (local dev only) · `npm test`
 
 ---
 
 ## License
 
-This project is open source under the **MIT License**. You can use, modify, and distribute the code with attribution. Full text: [LICENSE](./LICENSE).
+Copyright (c) 2026 Mahammad1500
+
+Released under the [MIT License](./LICENSE).
