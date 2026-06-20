@@ -1,46 +1,93 @@
 # Intervuex
 
-Intervuex is a full stack interview scheduling app built for hiring teams. Admins set up company workspaces and invite HR users. HR schedules interviews, tracks candidates in a pipeline, and reviews analytics. The app supports panel rounds (multiple interviewers), conflict checks before booking, and optional email notifications.
+Intervuex is a full stack interview scheduling application for hiring teams. Company admins create workspaces and manage HR users. HR staff schedule interviews, move candidates through a pipeline, and view analytics. The product supports panel interviews, scheduling conflict checks, and optional email notifications.
 
-**Login accounts:** Admin and HR only. Candidates and interviewers appear as email addresses on each interview. They do not sign in to the app.
+Only **Admin** and **HR** roles can log in. Candidate and interviewer emails are stored on each interview record; those people are not app users.
 
 ---
 
-## Live links
+## Live application
 
-| Link | URL | Who it is for |
-|------|-----|----------------|
-| **Production** | [intervuex-nine.vercel.app](https://intervuex-nine.vercel.app) | Real app with live data (Railway API + MongoDB). Use your own admin account. |
-| **UI demo** | [intervuex-demo.vercel.app](https://intervuex-demo.vercel.app) | Public preview with sample data. No backend. On the login page, click **Admin** or **HR** to explore. Demo login: `admin@intervuex.com` / `12345678` (also shown on the demo site). |
+Both links below are public on the internet. Anyone can open them in a browser.
 
-API health (production): [intervuex-production-5e78.up.railway.app/api/health](https://intervuex-production-5e78.up.railway.app/api/health)
+### 1. Production website (full application)
+
+**URL:** https://intervuex-nine.vercel.app
+
+This is the main live deployment. The React frontend runs on Vercel. The API runs on Railway. Data is stored in MongoDB Atlas.
+
+**What you will see when you open it:**
+
+- The **landing page** with product information
+- A **login page** for Admin and HR accounts
+- After sign in: dashboard, workspaces, scheduling, pipeline, analytics (based on role)
+
+**How to sign in:** Use an Admin or HR account that already exists in the system. HR users can also **register** if they have a workspace **Space code** from their company admin.
+
+This is a real running application, not a mockup.
+
+---
+
+### 2. UI demo (try the interface)
+
+**URL:** https://intervuex-demo.vercel.app
+
+This is a separate deployment for visitors who want to **explore the UI** without a real account or database.
+
+**What you will see:**
+
+- The same login and app screens as production
+- **Admin** and **HR** buttons on the login page with demo credentials visible
+- Sample companies, interviews, and charts (fake data built into the frontend)
+
+**How to try it:**
+
+1. Open the link above  
+2. On the login page, click **Admin** or **HR**  
+3. Browse dashboards, workspaces, pipeline, and other pages  
+4. Saving or editing data is disabled in preview mode  
+
+Demo credentials (also shown on the site): `admin@intervuex.com` / `12345678`
+
+---
+
+### 3. API health check (backend status)
+
+**URL:** https://intervuex-production-5e78.up.railway.app/api/health
+
+This is not a web page for end users. It returns a small JSON response from the production API.
+
+**What to check:**
+
+- `"status": "ok"` means the API server is running  
+- `"database": "connected"` means MongoDB is reachable  
+
+Use this link to confirm the backend is online after deployment or troubleshooting.
 
 ---
 
 ## Features
 
 **Workspaces**  
-Admin creates a company workspace and gets an 8 character Space code. HR can join with that code or be added from the Team page. Optional allowed email domains per workspace.
+Admins create a company workspace and receive an 8 character Space code. HR joins with that code or is added from the Team page.
 
 **Scheduling**  
-Four step wizard: candidate and interviewer details, date and time (with conflict detection), meeting link, review. Lead interviewer plus optional panel emails. Meeting links are pasted manually (Zoom, Google Meet, Teams, or any URL).
+Four step wizard: people and role, date and time (conflict check), meeting link, review. Supports a lead interviewer and optional panel emails. Paste a Zoom, Meet, Teams, or other meeting URL.
 
 **Pipeline and analytics**  
-HR sees interviews on a kanban board (Scheduled, Confirmed, Completed, Cancelled). Dashboards and charts show activity and trends.
+Kanban pipeline by interview status. Dashboards and charts for hiring activity.
 
 **Admin tools**  
-Team management, audit log, workspace settings, light/dark theme.
+Team management, audit log, settings, light and dark theme.
 
-**Optional integrations**  
-SMTP for welcome and interview emails. Google sign-in on the login page when OAuth env vars are configured (see `backend/.env.example`). Google Calendar and auto Meet generation are not required for the current workflow.
+**Optional**  
+SMTP email and Google sign-in when configured in environment variables (see `backend/.env.example`).
 
 ---
 
 ## Tech stack
 
-Frontend: React 18, Vite, Tailwind CSS, Zustand, React Router  
-Backend: Node.js, Express, MongoDB, Mongoose, JWT  
-Deploy: Vercel (frontend), Railway (backend), MongoDB Atlas
+React, Vite, Tailwind CSS, Node.js, Express, MongoDB, JWT, Vercel, Railway
 
 ---
 
@@ -48,122 +95,119 @@ Deploy: Vercel (frontend), Railway (backend), MongoDB Atlas
 
 ### Public and auth
 
-**Landing page**  
-Marketing page with product overview.
+Landing page
 
 ![Landing](./docs/screenshots/01-landing.png)
 
-**Login**  
-Email and password sign in. Optional Google button when configured.
+Login
 
 ![Login](./docs/screenshots/02-login.png)
 
-**Register**  
-HR registration with a workspace Space code.
+HR registration with Space code
 
 ![Register](./docs/screenshots/02b-register.png)
 
-### Admin
+### Admin views
 
-**Dashboard**  
-Platform stats and recent activity.
+Dashboard
 
 ![Admin dashboard](./docs/screenshots/03-admin-dashboard.png)
 
-**Workspaces**  
-Create companies, Space codes, and allowed domains.
+Workspaces
 
 ![Workspaces](./docs/screenshots/04-workspaces.png)
 
-**Team**  
-Manage HR users per workspace.
+Team
 
 ![Team](./docs/screenshots/05-team.png)
 
-**Schedule (panel)**  
-Scheduling wizard with multiple panel interviewers.
+Schedule with panel interviewers
 
-![Schedule panel step](./docs/screenshots/06-schedule-panel.png)
+![Schedule panel](./docs/screenshots/06-schedule-panel.png)
 
-**Schedule review**  
-Final review before confirming an interview.
+Schedule review step
 
 ![Schedule review](./docs/screenshots/06b-schedule-review.png)
 
-**Analytics**  
-Charts and hiring metrics.
+Analytics
 
 ![Admin analytics](./docs/screenshots/08-analytics-admin.png)
 
-**Audit log**  
-Record of admin actions.
+Audit log
 
 ![Audit log](./docs/screenshots/09-audit-log.png)
 
-**Settings**  
-Profile and preferences.
+Settings
 
 ![Admin settings](./docs/screenshots/10-settings-admin.png)
 
-### HR
+### HR views
 
-**HR dashboard**  
-Company scoped overview.
+Dashboard
 
 ![HR dashboard](./docs/screenshots/08-hr-dashboard.png)
 
-**Interviews list**  
-Filter and manage interviews.
+Interviews list
 
 ![HR interviews](./docs/screenshots/11-hr-interviews.png)
 
-**Pipeline**  
-Kanban view by status.
+Pipeline
 
 ![HR pipeline](./docs/screenshots/12-hr-pipeline.png)
 
-**Schedule**  
-HR scheduling flow.
+Schedule
 
 ![HR schedule](./docs/screenshots/13-hr-schedule.png)
 
-**HR analytics**
+Analytics
 
 ![HR analytics](./docs/screenshots/hr-analytics.png)
 
-**HR settings**
+Settings
 
 ![HR settings](./docs/screenshots/14-hr-settings.png)
 
 ---
 
-## Local setup
+## Run locally (developers)
 
-**Requirements:** Node.js 18+, npm 9+, MongoDB (local or Atlas)
+**Step 1.** Clone the repository
 
 ```bash
 git clone https://github.com/Mahammad1500/Intervuex.git
 cd Intervuex
+```
+
+**Step 2.** Install dependencies
+
+```bash
 npm run install:all
+```
+
+**Step 3.** Create environment files
+
+```bash
 npm run setup:env
 ```
 
-Edit `backend/.env` and `frontend/.env` using the matching `.env.example` files. At minimum set `MONGODB_URI`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` on the backend, and `VITE_API_URL` on the frontend.
+Copy values into `backend/.env` and `frontend/.env` from the `.env.example` files in each folder. You need at least `MONGODB_URI`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` on the backend, and `VITE_API_URL` on the frontend.
+
+**Step 4.** Start the app
 
 ```bash
 npm run dev
 ```
 
-Frontend: http://localhost:3000  
-API health: http://localhost:5000/api/health  
+Open http://localhost:3000 in your browser.  
+API health: http://localhost:5000/api/health
 
-Local dev can seed demo users (development only):
+**Step 5 (optional).** Seed demo users for local testing only
 
 ```bash
 curl -X POST http://localhost:5000/api/seed
 ```
 
-Run backend tests:
+**Step 6 (optional).** Run automated tests
 
 ```bash
 npm test
@@ -171,20 +215,24 @@ npm test
 
 ---
 
-## Deployment
+## Deploy to production (developers)
 
-Production uses two services plus a database:
+**Step 1.** Push this repository to GitHub.
 
-1. **Railway** runs the backend (`backend/` folder). Set variables from `backend/.env.example` (MongoDB URI, JWT secrets, `CLIENT_URL` pointing to your Vercel URL).
-2. **Vercel** hosts the frontend (`frontend/` folder). Set `VITE_API_URL` to your Railway API URL with `/api` suffix.
-3. **MongoDB Atlas** database name: `intervuex`.
+**Step 2.** Create a Railway project. Set root directory to `backend`. Add environment variables from `backend/.env.example`.
 
-The public UI demo is a second Vercel project from the same repo with root directory `frontend` and `VITE_UI_DEMO_MODE=true`. It does not need Railway or MongoDB.
+**Step 3.** Create a Vercel project. Set root directory to `frontend`. Set `VITE_API_URL` to your Railway URL plus `/api`.
 
-Do not commit `.env` files. Keep secrets in Railway, Vercel, or your local machine only.
+**Step 4.** Set Railway `CLIENT_URL` to your Vercel frontend URL.
+
+**Step 5.** Use MongoDB Atlas with database name `intervuex`.
+
+For a public UI demo only, create a second Vercel project with `VITE_UI_DEMO_MODE=true`. No Railway or database required for that demo.
+
+Never commit `.env` files to GitHub.
 
 ---
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+This project is open source under the **MIT License**. You can use, modify, and distribute the code with attribution. Full text: [LICENSE](./LICENSE).
