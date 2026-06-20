@@ -65,7 +65,8 @@ HR enters candidate email, lead interviewer email, role, type, and time — then
 
 | Document | What it covers |
 |----------|----------------|
-| **[docs/PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md)** | **Start here** — production vs demo, one codebase, env vars, why demo passwords show on demo only, mock data, deploy checklist |
+| **[docs/PROJECT_GUIDE.md](./docs/PROJECT_GUIDE.md)** | Production vs demo, env vars, architecture |
+| **[docs/TESTING.md](./docs/TESTING.md)** | How to test — `npm test`, `npm run dev`, browser checklists |
 | [README.md](./README.md) | Features, setup, API overview, screenshots |
 
 **Two live sites, one repo:**

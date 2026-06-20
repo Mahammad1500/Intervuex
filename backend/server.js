@@ -143,8 +143,10 @@ cron.schedule('*/15 * * * *', async () => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  logger.info(`🚀 Intervuex API running on port ${PORT} [${process.env.NODE_ENV}]`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`🚀 Intervuex API running on port ${PORT} [${process.env.NODE_ENV}]`);
+  });
+}
 
 module.exports = app;
